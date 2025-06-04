@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Letuslearn.now Account</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-FontAwesomeIntegrity" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:40px; background:#f5f5f5; }
+    .container { max-width:400px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    h1 { text-align:center; }
+    input { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:4px; }
+    .button { width:100%; padding:10px; background:#007bff; color:#fff; border:none; border-radius:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .button:hover { background:#0056b3; }
+    .secondary { background:#6c757d; margin-top:10px; }
+    .secondary:hover { background:#545b62; }
+    .icon-black { color:#000; margin-right:8px; }
+    .icon-white { color:#fff; margin-right:8px; }
+    select { margin-bottom:10px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+  <script>
+    function App() {
+      const [username, setUsername] = React.useState('');
+      const [password, setPassword] = React.useState('');
+      const [locale, setLocale] = React.useState('en_us');
+      const [t, setT] = React.useState({});
+
+      React.useEffect(() => {
+        fetch(`../../i18n/${locale}.json`)
+          .then(res => res.json())
+          .then(setT)
+          .catch(() => setT({}));
+      }, [locale]);
+
+      const handleLogin = () => {
+        alert('Login with ' + username);
+      };
+      const handleRegister = () => {
+        alert('Register new user');
+      };
+      return (
+        React.createElement('div', { className:'container' },
+          React.createElement('select', { value:locale, onChange:e=>setLocale(e.target.value) },
+            React.createElement('option', { value:'en_us' }, 'English'),
+            React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
+          ),
+          React.createElement('h1', null, t.title),
+          React.createElement('input', { type:'text', placeholder:t.username, value:username, onChange:e=>setUsername(e.target.value) }),
+          React.createElement('input', { type:'password', placeholder:t.password, value:password, onChange:e=>setPassword(e.target.value) }),
+          React.createElement('button', { className:'button', onClick:handleLogin },
+            React.createElement('i', { className:'fa-solid fa-right-to-bracket icon-black' }), t.login
+          ),
+          React.createElement('button', { className:'button secondary', onClick:handleRegister },
+            React.createElement('i', { className:'fa-solid fa-user-plus icon-white' }), t.register
+          )
+        )
+      );
+    }
+    ReactDOM.render(React.createElement(App), document.getElementById('root'));
+  </script>
+</body>
+</html>
