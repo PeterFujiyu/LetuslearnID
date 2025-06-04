@@ -11,6 +11,7 @@ app.use(express.json());
 const dbFile = process.env.DB_FILE || path.join(__dirname, 'users.db');
 const db = new sqlite3.Database(dbFile);
 
+
 // Initialize user table if it doesn't exist
 const initDb = () => {
   const query = `CREATE TABLE IF NOT EXISTS users (
