@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --ignore test/e2e.test.js",
+    "e2e": "mocha test/e2e.test.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "mocha": "^10.2.0",
+    "playwright": "^1.52.0",
     "supertest": "^6.3.3"
   }
 }

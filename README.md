@@ -27,9 +27,23 @@ Before starting the server you can set the following environment variables:
 Start the API from the `server` directory with:
 
 ```bash
-node index.js
+npm start
 ```
 Once running, visit http://localhost:3000/ to see the web interface.
+
+## Testing
+
+Run unit tests with:
+
+```bash
+npm test
+```
+
+An additional end-to-end test uses Playwright in headless mode to register a user and fetch the profile page. Because Playwright downloads a Chromium binary, it consumes more disk space and memory than the other tests. If resources are limited, you can skip this step; otherwise run:
+
+```bash
+npm run e2e
+```
 
 ## Future Work
 
