@@ -1,0 +1,10 @@
+node_modules/
+*.db
+*.log
+
+# Ignore Node.js generated directories
+server/node_modules/
+server/users.db
+
+# Ignore environment files
+.env
