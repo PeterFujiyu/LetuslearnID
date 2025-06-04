@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Account Settings</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-FontAwesomeIntegrity" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:40px; background:#f5f5f5; }
+    .container { max-width:400px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    h1 { text-align:center; }
+    input { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:4px; }
+    .button { width:100%; padding:10px; background:#007bff; color:#fff; border:none; border-radius:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:5px; }
+    .button:hover { background:#0056b3; }
+    .secondary { background:#6c757d; }
+    .secondary:hover { background:#545b62; }
+    .icon-white { color:#fff; margin-right:8px; }
+    label { display:block; margin-top:10px; }
+    select { margin-bottom:10px; }
+    a.logout { display:block; margin-top:15px; text-align:center; color:#007bff; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+  <script>
+    function SettingsApp() {
+      const [locale, setLocale] = React.useState('en_us');
+      const [t, setT] = React.useState({});
+      const [newEmail, setNewEmail] = React.useState('');
+      const [newPassword, setNewPassword] = React.useState('');
+      const [confirmPassword, setConfirmPassword] = React.useState('');
+      const [twoFactor, setTwoFactor] = React.useState(false);
+      const [passkey, setPasskey] = React.useState(false);
+
+      React.useEffect(() => {
+        fetch(`../../i18n/${locale}.json`)
+          .then(res => res.json())
+          .then(setT)
+          .catch(() => setT({}));
+      }, [locale]);
+
+      const handleSave = () => {
+        alert('Saved settings');
+      };
+
+      const handleBackupCodes = () => {
+        alert('Generate backup codes');
+      };
+
+      return (
+        React.createElement('div', { className:'container' },
+          React.createElement('select', { value:locale, onChange:e=>setLocale(e.target.value) },
+            React.createElement('option', { value:'en_us' }, 'English'),
+            React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
+          ),
+          React.createElement('h1', null, t.settings_title),
+          React.createElement('input', { type:'email', placeholder:t.new_email, value:newEmail, onChange:e=>setNewEmail(e.target.value) }),
+          React.createElement('button', { className:'button', onClick:() => alert(t.change_email) },
+            React.createElement('i', { className:'fa-solid fa-envelope icon-white' }), t.change_email
+          ),
+          React.createElement('input', { type:'password', placeholder:t.new_password, value:newPassword, onChange:e=>setNewPassword(e.target.value) }),
+          React.createElement('input', { type:'password', placeholder:t.confirm_password, value:confirmPassword, onChange:e=>setConfirmPassword(e.target.value) }),
+          React.createElement('button', { className:'button', onClick:() => alert(t.change_password) },
+            React.createElement('i', { className:'fa-solid fa-key icon-white' }), t.change_password
+          ),
+          React.createElement('label', null,
+            React.createElement('input', { type:'checkbox', checked:twoFactor, onChange:e=>setTwoFactor(e.target.checked) }), ' ', t.twofactor
+          ),
+          React.createElement('label', null,
+            React.createElement('input', { type:'checkbox', checked:passkey, onChange:e=>setPasskey(e.target.checked) }), ' ', t.passkeys
+          ),
+          React.createElement('button', { className:'button secondary', onClick:handleBackupCodes },
+            React.createElement('i', { className:'fa-solid fa-shield-halved icon-white' }), t.backup_codes
+          ),
+          React.createElement('button', { className:'button', onClick:handleSave },
+            React.createElement('i', { className:'fa-solid fa-floppy-disk icon-white' }), t.save
+          ),
+          React.createElement('a', { href:'../index/index.html', className:'logout' }, t.logout)
+        )
+      );
+    }
+    ReactDOM.render(React.createElement(SettingsApp), document.getElementById('root'));
+  </script>
+</body>
+</html>

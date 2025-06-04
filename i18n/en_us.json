@@ -3,5 +3,16 @@
   "username": "Username",
   "password": "Password",
   "login": "Login",
-  "register": "Register"
+  "register": "Register",
+  "settings_title": "Account Settings",
+  "new_password": "New Password",
+  "confirm_password": "Confirm Password",
+  "change_password": "Change Password",
+  "new_email": "New Email",
+  "change_email": "Change Email",
+  "twofactor": "Enable Two-Factor Auth",
+  "passkeys": "Manage Passkeys",
+  "backup_codes": "Generate Backup Codes",
+  "save": "Save Settings",
+  "logout": "Logout"
 }
