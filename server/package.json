@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    // 保持原来 master 分支：npm test 跑全部测试
     "test": "mocha",
+    // 如果需要只跑单元测试（忽略 e2e），可以用下面这个
+    "unit": "mocha --ignore test/e2e.test.js",
+    // 单独跑 e2e
+    "e2e": "mocha test/e2e.test.js",
     "start": "node index.js"
   },
   "keywords": [],
@@ -19,6 +24,7 @@
   },
   "devDependencies": {
     "mocha": "^10.2.0",
+    "playwright": "^1.52.0",
     "supertest": "^6.3.3"
   }
 }

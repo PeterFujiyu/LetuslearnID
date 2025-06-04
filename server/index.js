@@ -9,6 +9,7 @@ const app = express();
 app.use(express.json());
 const clientDir = path.join(__dirname, "..", "client");
 app.use(express.static(clientDir));
+app.use('/i18n', express.static(path.join(__dirname, '..', 'i18n')));
 app.get("/", (req, res) => {
   res.sendFile(path.join(clientDir, "index", "index.html"));
 });
