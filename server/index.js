@@ -7,6 +7,11 @@ const { promisify } = require('util');
 
 const app = express();
 app.use(express.json());
+const clientDir = path.join(__dirname, "..", "client");
+app.use(express.static(clientDir));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(clientDir, "index", "index.html"));
+});
 
 const dbFile = process.env.DB_FILE || path.join(__dirname, 'users.db');
 const db = new sqlite3.Database(dbFile);

@@ -36,12 +36,41 @@
           .catch(() => setT({}));
       }, [locale]);
 
-      const handleLogin = () => {
-        alert('Login with ' + username);
-      };
-      const handleRegister = () => {
-        alert('Register new user');
-      };
+        const handleLogin = async () => {
+          try {
+            const res = await fetch("/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+              localStorage.setItem("token", data.token);
+              alert("Login successful");
+            } else {
+              alert(data.error || "Login failed");
+            }
+          } catch (err) {
+            alert("Login error");
+          }
+        };
+        const handleRegister = async () => {
+          try {
+            const res = await fetch("/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (res.ok) {
+              alert("Registered. Please login");
+            } else {
+              alert(data.error || "Register failed");
+            }
+          } catch (err) {
+            alert("Register error");
+          }
+        };
       return (
         React.createElement('div', { className:'container' },
           React.createElement('select', { value:locale, onChange:e=>setLocale(e.target.value) },
