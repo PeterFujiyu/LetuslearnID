@@ -3,5 +3,16 @@
   "username": "用户名",
   "password": "密码",
   "login": "登录",
-  "register": "注册"
+  "register": "注册",
+  "settings_title": "账户设置",
+  "new_password": "新密码",
+  "confirm_password": "确认密码",
+  "change_password": "修改密码",
+  "new_email": "新邮箱",
+  "change_email": "修改邮箱",
+  "twofactor": "启用两步验证",
+  "passkeys": "管理通行密钥",
+  "backup_codes": "生成备用代码",
+  "save": "保存设置",
+  "logout": "登出"
 }
