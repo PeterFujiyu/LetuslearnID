@@ -8,7 +8,8 @@ const { promisify } = require('util');
 const app = express();
 app.use(express.json());
 
-const db = new sqlite3.Database(path.join(__dirname, 'users.db'));
+const dbFile = process.env.DB_FILE || path.join(__dirname, 'users.db');
+const db = new sqlite3.Database(dbFile);
 
 // Initialize user table if it doesn't exist
 const initDb = () => {
@@ -100,9 +101,14 @@ app.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+
 initDb().then(() => {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  }
 }).catch((err) => {
   console.error('Failed to initialize database', err);
 });
+
+module.exports = { app, initDb, db };
