@@ -8,7 +8,8 @@ const { promisify } = require('util');
 const app = express();
 app.use(express.json());
 
-const db = new sqlite3.Database(path.join(__dirname, 'users.db'));
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'users.db');
+const db = new sqlite3.Database(dbPath);
 
 // Initialize user table if it doesn't exist
 const initDb = () => {
