@@ -29,6 +29,12 @@ Start the API from the `server` directory with:
 ```bash
 node index.js
 ```
+
+Or run the convenience script:
+
+```bash
+npm start
+```
 Once running, visit http://localhost:3000/ to see the web interface.
 
 ## Future Work
