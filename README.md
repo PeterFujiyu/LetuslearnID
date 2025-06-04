@@ -22,9 +22,18 @@ Before starting the server you can set the following environment variables:
 
 - `JWT_SECRET` – secret used to sign tokens (default: `dev-secret`)
 - `PORT` – port for the HTTP server (default: `3000`)
-- `DB_PATH` – path to the SQLite database file (default: `./server/users.db`)
+- `DB_FILE` – path to the SQLite database file (default: `./server/users.db`)
+
+The variable was renamed from `DB_PATH` to `DB_FILE` to better describe its
+purpose. Older scripts using `DB_PATH` should be updated.
 
 Start the API from the `server` directory with:
+
+```bash
+npm start
+```
+
+Or run the convenience script:
 
 ```bash
 npm start
