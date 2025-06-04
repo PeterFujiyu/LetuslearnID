@@ -29,7 +29,16 @@ Start the API from the `server` directory with:
 ```bash
 node index.js
 ```
-Once running, visit http://localhost:3000/ to see the web interface.
+The server also serves the frontend. Open http://localhost:3000/ in your browser to interact with it.
+
+## Testing
+
+Run the test suite from the `server` directory:
+
+```bash
+npm test
+```
+If this is your first time, install dependencies in `server` using `npm install` first.
 
 ## Future Work
 
