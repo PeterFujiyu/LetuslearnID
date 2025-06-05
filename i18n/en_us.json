@@ -25,5 +25,8 @@
   "continue": "Continue",
   "current_password": "Current Password",
   "error_title": "Operation failed",
-  "back": "Back"
+  "back": "Back",
+  "account_menu": "Account",
+  "manage_page": "Manage",
+  "bookmarks": "Bookmarks"
 }

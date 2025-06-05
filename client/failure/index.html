@@ -18,10 +18,11 @@
     function Failure() {
       const params = new URLSearchParams(window.location.search);
       const msg = params.get('msg');
-      const [locale, setLocale] = React.useState('en_us');
+      const [locale, setLocale] = React.useState(localStorage.getItem('locale') || 'en_us');
       const [t, setT] = React.useState({});
 
       React.useEffect(() => {
+        localStorage.setItem('locale', locale);
         fetch(`../../i18n/${locale}.json`)
           .then(res => res.json())
           .then(setT)

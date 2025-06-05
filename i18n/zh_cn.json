@@ -25,5 +25,8 @@
   "continue": "继续",
   "current_password": "当前密码",
   "error_title": "操作失败",
-  "back": "返回"
+  "back": "返回",
+  "account_menu": "账户",
+  "manage_page": "管理",
+  "bookmarks": "书签"
 }

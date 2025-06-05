@@ -24,11 +24,12 @@
     function App() {
       const [username, setUsername] = React.useState('');
       const [password, setPassword] = React.useState('');
-      const [locale, setLocale] = React.useState('en_us');
+      const [locale, setLocale] = React.useState(localStorage.getItem('locale') || 'en_us');
       const [t, setT] = React.useState({});
       const [days, setDays] = React.useState(2);
 
       React.useEffect(() => {
+        localStorage.setItem('locale', locale);
         fetch(`../../i18n/${locale}.json`)
           .then(res => res.json())
           .then(setT)
