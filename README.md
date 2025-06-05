@@ -1,59 +1,50 @@
 # LetuslearnID
 
-This repository contains a lightweight account management server built with [Express](https://expressjs.com/). It currently stores user data in SQLite to keep resource usage minimal.
+LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](https://expressjs.com/) 实现。为了减少内存占用，默认使用 SQLite 存储用户数据，同时提供 React 前端页面及多语言支持。
 
-## Prerequisites
+## 目录结构
 
-- **Node.js** 18 or 20
-- **npm** (comes with Node.js)
-- **Optional:** Python 3.11 if `node-gyp` needs to compile native modules
+- `server/` — REST API 代码以及 Mocha 测试
+- `client/` — React 引擎的登录和账户设置页
+- `i18n/` — 翻译文件（已包含中英文版本）
+- `docs/` — 开发设计文档
 
-## Setup
-
-Install dependencies by running:
+## 安装
 
 ```bash
 cd server && npm install
 ```
 
-## Running the Server
+## 启动服务
 
-Before starting the server you can set the following environment variables:
+可以通过以下环境变量来调整服务器行为：
 
-- `JWT_SECRET` – secret used to sign tokens (default: `dev-secret`)
-- `PORT` – port for the HTTP server (default: `3000`)
-- `DB_FILE` – path to the SQLite database file (default: `./server/users.db`)
+- `JWT_SECRET` — JWT 签名密钥（默认 `dev-secret`）
+- `PORT` — HTTP 服务端口（默认 `3000`）
+- `DB_FILE` — SQLite 数据库文件路径（默认 `./server/users.db`）
 
-The variable was renamed from `DB_PATH` to `DB_FILE` to better describe its
-purpose. Older scripts using `DB_PATH` should be updated.
-
-Start the API from the `server` directory with:
+在 `server` 目录下启动服务：
 
 ```bash
 npm start
 ```
 
-Or run the convenience script:
+服务启动后可访问 [http://localhost:3000/](http://localhost:3000/) 以打开登录页，账户设置页面位于 `/settings/` 目录。
+
+## 测试
+
+运行单元和端到端测试：
 
 ```bash
-npm start
-```
-Once running, visit http://localhost:3000/ to see the web interface.
-
-## Testing
-
-Run unit tests with:
-
-```bash
-npm test
+npm test    # 包含单元以及 e2e 测试
 ```
 
-An additional end-to-end test uses Playwright in headless mode to register a user and fetch the profile page. Because Playwright downloads a Chromium binary, it consumes more disk space and memory than the other tests. If resources are limited, you can skip this step; otherwise run:
+如果只需运行 e2e 测试：
 
 ```bash
 npm run e2e
 ```
 
-## Future Work
+## 未来工作
 
-The project plans to migrate from SQLite to PostgreSQL in order to scale more efficiently. This migration is tracked as future technical debt.
+为了更好的拥有扩展性，项目将来计划将数据库移植自 SQLite 到 PostgreSQL，该任务由于资源限制已经创建为技术债。
