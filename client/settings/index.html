@@ -42,7 +42,7 @@
       const bookmarks = React.useMemo(() => {
         try {
           return JSON.parse(localStorage.getItem('bookmarks') || '[]');
-        } catch { return []; }
+        } catch (e) { return []; }
       }, []);
 
       React.useEffect(() => {
