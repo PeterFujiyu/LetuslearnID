@@ -41,8 +41,9 @@ const createUser = async (username, passwordHash) => {
 // JWT secret; in production use environment variable
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
-const generateToken = (user) => {
-  return jwt.sign({ id: user.id, username: user.username }, SECRET, { expiresIn: '1h' });
+const generateToken = (user, days) => {
+  const opts = days && days > 1 && days < 14 ? { expiresIn: `${days}d` } : { expiresIn: '1h' };
+  return jwt.sign({ id: user.id, username: user.username }, SECRET, opts);
 };
 
 const authenticateToken = (req, res, next) => {
@@ -76,7 +77,7 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, rememberDays } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
   }
@@ -89,7 +90,7 @@ app.post('/login', async (req, res) => {
     if (!match) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const token = generateToken(user);
+    const token = generateToken(user, rememberDays);
     res.json({ token });
   } catch (err) {
     console.error(err);

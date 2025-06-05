@@ -1,6 +1,7 @@
 process.env.DB_FILE = ':memory:';
 const request = require('supertest');
 const assert = require('assert');
+const jwt = require('jsonwebtoken');
 const { app, initDb, db } = require('../index');
 
 before(async () => {
@@ -29,12 +30,14 @@ describe('POST /register', () => {
 });
 
 describe('POST /login', () => {
-  it('returns a token with valid credentials', async () => {
+  it('returns a token with valid credentials and rememberDays', async () => {
     const res = await request(app)
       .post('/login')
-      .send({ username: 'alice', password: 'secret' });
+      .send({ username: 'alice', password: 'secret', rememberDays: 2 });
     assert.strictEqual(res.status, 200);
     assert.ok(res.body.token);
+    const decoded = jwt.decode(res.body.token);
+    assert.strictEqual(Math.round((decoded.exp - decoded.iat) / 86400), 2);
     global.token = res.body.token;
   });
 
