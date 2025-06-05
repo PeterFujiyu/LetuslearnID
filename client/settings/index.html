@@ -17,6 +17,10 @@
     label { display:block; margin-top:10px; }
     select { margin-bottom:10px; }
     a.logout { display:block; margin-top:15px; text-align:center; color:#007bff; }
+    .account { position:absolute; top:10px; right:10px; cursor:pointer; }
+    .dropdown { position:absolute; top:40px; right:10px; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    .dropdown a { display:block; padding:8px 12px; color:#007bff; text-decoration:none; }
+    .dropdown a:hover { background:#f5f5f5; }
   </style>
 </head>
 <body>
@@ -25,8 +29,10 @@
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
   <script>
     function SettingsApp() {
-      const [locale, setLocale] = React.useState('en_us');
+      const [locale, setLocale] = React.useState(() => localStorage.getItem('locale') || 'en_us');
       const [t, setT] = React.useState({});
+      const [showMenu, setShowMenu] = React.useState(false);
+      const [user, setUser] = React.useState(null);
       const [newEmail, setNewEmail] = React.useState('');
       const [oldPassword, setOldPassword] = React.useState('');
       const [newPassword, setNewPassword] = React.useState('');
@@ -35,11 +41,21 @@
       const [passkey, setPasskey] = React.useState(false);
 
       React.useEffect(() => {
+        localStorage.setItem('locale', locale);
         fetch(`../../i18n/${locale}.json`)
           .then(res => res.json())
           .then(setT)
           .catch(() => setT({}));
       }, [locale]);
+
+      React.useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        fetch('/profile', { headers: { 'Authorization': 'Bearer ' + token } })
+          .then(res => res.json())
+          .then(setUser)
+          .catch(() => {});
+      }, []);
 
       const handleSave = () => {
         window.location.href = '../success/index.html?msg=' + encodeURIComponent('Saved settings') + '&next=../settings/index.html';
@@ -73,7 +89,18 @@
       };
 
       return (
-        React.createElement('div', { className:'container' },
+        React.createElement('div', { className:'container', style:{position:'relative'} },
+          React.createElement('div', { className:'account', onClick:() => setShowMenu(!showMenu) },
+            React.createElement('i', { className:'fa-solid fa-user' }),
+            ' ', user ? user.username : ''
+          ),
+          showMenu && React.createElement('div', { className:'dropdown' },
+            React.createElement('a', { href:'../index/index.html' }, t.logout),
+            React.createElement('a', { href:'../manage/index.html' }, t.manage_title),
+            (JSON.parse(localStorage.getItem('bookmarks') || '[]')).map((b, i) =>
+              React.createElement('a', { key:i, href:b.href }, b.name)
+            )
+          ),
           React.createElement('select', { value:locale, onChange:e=>setLocale(e.target.value) },
             React.createElement('option', { value:'en_us' }, 'English'),
             React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
