@@ -16,5 +16,12 @@
   "save": "Save Settings",
   "logout": "Logout",
   "remember_days": "Days to stay logged in",
-  "manage_title": "Management"
+  "manage_title": "Management",
+  "welcome_back": "Welcome back",
+  "sign_up_link": "Sign up",
+  "sign_in_link": "Log in",
+  "register_success": "Registration successful",
+  "login_success": "Login successful",
+  "continue": "Continue"
+  ,"current_password": "Current Password"
 }

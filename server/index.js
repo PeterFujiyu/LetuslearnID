@@ -38,6 +38,11 @@ const createUser = async (username, passwordHash) => {
   return promisify(db.run.bind(db))(query, username, passwordHash);
 };
 
+const updateUserPassword = async (id, passwordHash) => {
+  const query = 'UPDATE users SET password_hash = ? WHERE id = ?';
+  return promisify(db.run.bind(db))(query, passwordHash, id);
+};
+
 // JWT secret; in production use environment variable
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
@@ -103,6 +108,25 @@ app.get('/profile', authenticateToken, async (req, res) => {
     const user = await getUserByUsername(req.user.username);
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json({ id: user.id, username: user.username });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/change-password', authenticateToken, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ error: 'Old and new passwords are required' });
+  }
+  try {
+    const user = await getUserByUsername(req.user.username);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const match = await bcrypt.compare(oldPassword, user.password_hash);
+    if (!match) return res.status(401).json({ error: 'Invalid credentials' });
+    const hash = await bcrypt.hash(newPassword, 10);
+    await updateUserPassword(user.id, hash);
+    res.json({ message: 'Password changed' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
