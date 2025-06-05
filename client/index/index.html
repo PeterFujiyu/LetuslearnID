@@ -28,6 +28,7 @@
       const [password, setPassword] = React.useState('');
       const [locale, setLocale] = React.useState('en_us');
       const [t, setT] = React.useState({});
+      const [days, setDays] = React.useState(2);
 
       React.useEffect(() => {
         fetch(`../../i18n/${locale}.json`)
@@ -41,12 +42,12 @@
             const res = await fetch("/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username, password })
+              body: JSON.stringify({ username, password, rememberDays: Number(days) })
             });
             const data = await res.json();
             if (res.ok) {
               localStorage.setItem("token", data.token);
-              alert("Login successful");
+              window.location.href = "../manage/index.html";
             } else {
               alert(data.error || "Login failed");
             }
@@ -80,6 +81,7 @@
           React.createElement('h1', null, t.title),
           React.createElement('input', { type:'text', placeholder:t.username, value:username, onChange:e=>setUsername(e.target.value) }),
           React.createElement('input', { type:'password', placeholder:t.password, value:password, onChange:e=>setPassword(e.target.value) }),
+          React.createElement('input', { type:'number', min:2, max:13, value:days, onChange:e=>setDays(e.target.value) , placeholder:t.remember_days }),
           React.createElement('button', { className:'button', onClick:handleLogin },
             React.createElement('i', { className:'fa-solid fa-right-to-bracket icon-black' }), t.login
           ),

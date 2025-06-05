@@ -14,5 +14,7 @@
   "passkeys": "管理通行密钥",
   "backup_codes": "生成备用代码",
   "save": "保存设置",
-  "logout": "登出"
+  "logout": "登出",
+  "remember_days": "保持登录天数",
+  "manage_title": "管理页面"
 }

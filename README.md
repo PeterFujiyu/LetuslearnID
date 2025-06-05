@@ -29,7 +29,8 @@ cd server && npm install
 npm start
 ```
 
-服务启动后可访问 [http://localhost:3000/](http://localhost:3000/) 以打开登录页，账户设置页面位于 `/settings/` 目录。
+服务启动后可访问 [http://localhost:3000/](http://localhost:3000/) 以打开登录页。
+登录表单允许设置 2-13 天的免登录时长，成功后跳转到 `/manage/` 管理页面，账户设置页面位于 `/settings/` 目录。
 
 ## 测试
 

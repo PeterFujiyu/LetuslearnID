@@ -14,5 +14,7 @@
   "passkeys": "Manage Passkeys",
   "backup_codes": "Generate Backup Codes",
   "save": "Save Settings",
-  "logout": "Logout"
+  "logout": "Logout",
+  "remember_days": "Days to stay logged in",
+  "manage_title": "Management"
 }

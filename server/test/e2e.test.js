@@ -53,7 +53,7 @@ describe('Browser flows', function() {
       const r = await fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: u, password: p })
+        body: JSON.stringify({ username: u, password: p, rememberDays: 2 })
       });
       const body = await r.json();
       if (r.ok) localStorage.setItem('token', body.token);
