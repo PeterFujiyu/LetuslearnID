@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Success</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background:#f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; }
+    .box { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; width:360px; }
+    .button { width:100%; padding:10px; background:#0A84FF; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-top:20px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+  <script>
+    function Success() {
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get('type');
+      const [locale, setLocale] = React.useState('en_us');
+      const [t, setT] = React.useState({});
+
+      React.useEffect(() => {
+        fetch(`../../i18n/${locale}.json`)
+          .then(res => res.json())
+          .then(setT)
+          .catch(() => setT({}));
+      }, [locale]);
+
+      const message = type === 'register' ? t.register_success : t.login_success;
+      const next = type === 'register' ? '../index/index.html' : '../manage/index.html';
+
+      return (
+        React.createElement('div', { className:'box' },
+          React.createElement('select', { value:locale, onChange:e=>setLocale(e.target.value) },
+            React.createElement('option', { value:'en_us' }, 'English'),
+            React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
+          ),
+          React.createElement('h1', null, message),
+          React.createElement('button', { className:'button', onClick:() => window.location.href = next }, t.continue)
+        )
+      );
+    }
+    ReactDOM.render(React.createElement(Success), document.getElementById('root'));
+  </script>
+</body>
+</html>

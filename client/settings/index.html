@@ -28,6 +28,7 @@
       const [locale, setLocale] = React.useState('en_us');
       const [t, setT] = React.useState({});
       const [newEmail, setNewEmail] = React.useState('');
+      const [oldPassword, setOldPassword] = React.useState('');
       const [newPassword, setNewPassword] = React.useState('');
       const [confirmPassword, setConfirmPassword] = React.useState('');
       const [twoFactor, setTwoFactor] = React.useState(false);
@@ -42,6 +43,29 @@
 
       const handleSave = () => {
         alert('Saved settings');
+      };
+
+      const handleChangePassword = async () => {
+        if (newPassword !== confirmPassword) {
+          alert('Passwords do not match');
+          return;
+        }
+        const token = localStorage.getItem('token');
+        try {
+          const res = await fetch('/change-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ oldPassword, newPassword })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            window.location.href = '../success/index.html?type=login';
+          } else {
+            alert(data.error || 'Change failed');
+          }
+        } catch (err) {
+          alert('Change error');
+        }
       };
 
       const handleBackupCodes = () => {
@@ -59,11 +83,10 @@
           React.createElement('button', { className:'button', onClick:() => alert(t.change_email) },
             React.createElement('i', { className:'fa-solid fa-envelope icon-white' }), t.change_email
           ),
+          React.createElement('input', { type:'password', placeholder:t.current_password, value:oldPassword, onChange:e=>setOldPassword(e.target.value) }),
           React.createElement('input', { type:'password', placeholder:t.new_password, value:newPassword, onChange:e=>setNewPassword(e.target.value) }),
           React.createElement('input', { type:'password', placeholder:t.confirm_password, value:confirmPassword, onChange:e=>setConfirmPassword(e.target.value) }),
-          React.createElement('button', { className:'button', onClick:() => alert(t.change_password) },
-            React.createElement('i', { className:'fa-solid fa-key icon-white' }), t.change_password
-          ),
+          React.createElement('button', { className:'button', onClick:handleChangePassword }, t.change_password),
           React.createElement('label', null,
             React.createElement('input', { type:'checkbox', checked:twoFactor, onChange:e=>setTwoFactor(e.target.checked) }), ' ', t.twofactor
           ),

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Letuslearn.now Account</title>
+  <title>Sign Up</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     body { font-family: Arial, sans-serif; margin:0; background:#f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; }
@@ -21,12 +21,11 @@
   <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
   <script>
-    function App() {
+    function Register() {
       const [username, setUsername] = React.useState('');
       const [password, setPassword] = React.useState('');
       const [locale, setLocale] = React.useState('en_us');
       const [t, setT] = React.useState({});
-      const [days, setDays] = React.useState(2);
 
       React.useEffect(() => {
         fetch(`../../i18n/${locale}.json`)
@@ -35,40 +34,39 @@
           .catch(() => setT({}));
       }, [locale]);
 
-        const handleLogin = async () => {
-          try {
-            const res = await fetch("/login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username, password, rememberDays: Number(days) })
-            });
-            const data = await res.json();
-            if (res.ok) {
-              localStorage.setItem("token", data.token);
-              window.location.href = "../success/index.html?type=login";
-            } else {
-              alert(data.error || "Login failed");
-            }
-          } catch (err) {
-            alert("Login error");
+      const handleRegister = async () => {
+        try {
+          const res = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            window.location.href = '../success/index.html?type=register';
+          } else {
+            alert(data.error || 'Register failed');
           }
-        };
+        } catch (err) {
+          alert('Register error');
+        }
+      };
+
       return (
         React.createElement('div', { className:'container' },
           React.createElement('select', { value:locale, onChange:e=>setLocale(e.target.value) },
             React.createElement('option', { value:'en_us' }, 'English'),
             React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
           ),
-          React.createElement('h1', null, t.welcome_back || t.title),
+          React.createElement('h1', null, t.register),
           React.createElement('input', { type:'text', placeholder:t.username, value:username, onChange:e=>setUsername(e.target.value) }),
           React.createElement('input', { type:'password', placeholder:t.password, value:password, onChange:e=>setPassword(e.target.value) }),
-          React.createElement('input', { type:'number', min:2, max:13, value:days, onChange:e=>setDays(e.target.value) , placeholder:t.remember_days }),
-          React.createElement('button', { className:'button', onClick:handleLogin }, t.login),
-          React.createElement('a', { href:'../register/index.html' }, t.sign_up_link)
+          React.createElement('button', { className:'button', onClick:handleRegister }, t.register),
+          React.createElement('a', { href:'../index/index.html' }, t.sign_in_link)
         )
       );
     }
-    ReactDOM.render(React.createElement(App), document.getElementById('root'));
+    ReactDOM.render(React.createElement(Register), document.getElementById('root'));
   </script>
 </body>
 </html>

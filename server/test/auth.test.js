@@ -64,3 +64,21 @@ describe('GET /profile', () => {
   });
 });
 
+describe('POST /change-password', () => {
+  it('changes password for authenticated user', async () => {
+    const res = await request(app)
+      .post('/change-password')
+      .set('Authorization', `Bearer ${global.token}`)
+      .send({ oldPassword: 'secret', newPassword: 'newpass' });
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.message, 'Password changed');
+  });
+
+  it('logs in with new password', async () => {
+    const res = await request(app)
+      .post('/login')
+      .send({ username: 'alice', password: 'newpass' });
+    assert.strictEqual(res.status, 200);
+  });
+});
+
