@@ -23,5 +23,7 @@
   "register_success": "注册成功",
   "login_success": "登录成功",
   "continue": "继续",
-  "current_password": "当前密码"
+  "current_password": "当前密码",
+  "error_title": "操作失败",
+  "back": "返回"
 }

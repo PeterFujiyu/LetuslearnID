@@ -45,10 +45,10 @@
           if (res.ok) {
             window.location.href = '../success/index.html?type=register';
           } else {
-            alert(data.error || 'Register failed');
+            window.location.href = `../failure/index.html?msg=${encodeURIComponent(data.error || 'Register failed')}`;
           }
         } catch (err) {
-          alert('Register error');
+          window.location.href = '../failure/index.html?msg=Register%20error';
         }
       };
 

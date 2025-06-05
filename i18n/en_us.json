@@ -22,6 +22,8 @@
   "sign_in_link": "Log in",
   "register_success": "Registration successful",
   "login_success": "Login successful",
-  "continue": "Continue"
-  ,"current_password": "Current Password"
+  "continue": "Continue",
+  "current_password": "Current Password",
+  "error_title": "Operation failed",
+  "back": "Back"
 }

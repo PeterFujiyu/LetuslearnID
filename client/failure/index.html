@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Success</title>
+  <title>Failure</title>
   <style>
     body { font-family: Arial, sans-serif; margin:0; background:#f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; }
     .box { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; width:360px; }
     .button { width:100%; padding:10px; background:#0A84FF; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-top:20px; }
+    h1 { color:#b00020; }
   </style>
 </head>
 <body>
@@ -14,11 +15,9 @@
   <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
   <script>
-    function Success() {
+    function Failure() {
       const params = new URLSearchParams(window.location.search);
-      const type = params.get('type');
-      const msgParam = params.get('msg');
-      const nextParam = params.get('next');
+      const msg = params.get('msg');
       const [locale, setLocale] = React.useState('en_us');
       const [t, setT] = React.useState({});
 
@@ -29,21 +28,19 @@
           .catch(() => setT({}));
       }, [locale]);
 
-      const message = msgParam || (type === 'register' ? t.register_success : t.login_success);
-      const next = nextParam || (type === 'register' ? '../index/index.html' : '../manage/index.html');
-
       return (
         React.createElement('div', { className:'box' },
           React.createElement('select', { value:locale, onChange:e=>setLocale(e.target.value) },
             React.createElement('option', { value:'en_us' }, 'English'),
             React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
           ),
-          React.createElement('h1', null, message),
-          React.createElement('button', { className:'button', onClick:() => window.location.href = next }, t.continue)
+          React.createElement('h1', null, t.error_title),
+          React.createElement('p', null, msg),
+          React.createElement('button', { className:'button', onClick:() => window.history.back() }, t.back)
         )
       );
     }
-    ReactDOM.render(React.createElement(Success), document.getElementById('root'));
+    ReactDOM.render(React.createElement(Failure), document.getElementById('root'));
   </script>
 </body>
 </html>

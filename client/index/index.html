@@ -47,10 +47,10 @@
               localStorage.setItem("token", data.token);
               window.location.href = "../success/index.html?type=login";
             } else {
-              alert(data.error || "Login failed");
+              window.location.href = `../failure/index.html?msg=${encodeURIComponent(data.error || 'Login failed')}`;
             }
           } catch (err) {
-            alert("Login error");
+            window.location.href = "../failure/index.html?msg=Login%20error";
           }
         };
       return (
