@@ -46,6 +46,12 @@ npm start
 npm test    # 包含单元以及 e2e 测试
 ```
 
+仅运行单元测试：
+
+```bash
+npm run unit
+```
+
 如果只需运行 e2e 测试：
 
 ```bash
