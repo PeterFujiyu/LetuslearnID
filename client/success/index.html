@@ -23,16 +23,29 @@
       const nextParam = params.get('next');
       const [locale, setLocale] = React.useState(localStorage.getItem('locale') || 'en_us');
       const [t, setT] = React.useState({});
+      const [message, setMessage] = React.useState('');
 
       React.useEffect(() => {
         localStorage.setItem('locale', locale);
         fetch(`../../i18n/${locale}.json`)
           .then(res => res.json())
-          .then(data => { setT(data); document.title = msgParam || (type === 'register' ? data.register_success : data.login_success); })
+          .then(data => {
+            setT(data);
+            const msg = msgParam ? (data[msgParam] || msgParam) :
+              (type === 'register' ? data.register_success : data.login_success);
+            setMessage(msg);
+            document.title = msg;
+          })
           .catch(() => setT({}));
       }, [locale]);
 
-      const message = msgParam || (type === 'register' ? t.register_success : t.login_success);
+      React.useEffect(() => {
+        const msg = msgParam ? (t[msgParam] || msgParam) :
+          (type === 'register' ? t.register_success : t.login_success);
+        setMessage(msg);
+        document.title = msg;
+      }, [t]);
+
       const next = nextParam || (type === 'register' ? '../index/index.html' : '../manage/index.html');
 
       return (

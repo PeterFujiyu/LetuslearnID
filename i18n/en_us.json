@@ -23,6 +23,7 @@
   "have_account": "Already have an account?",
   "register_success": "Registration successful",
   "login_success": "Login successful",
+  "success": "Success",
   "continue": "Continue",
   "current_password": "Current Password",
   "error_title": "Operation failed",
