@@ -5,15 +5,14 @@
   <title>Sign Up</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; }
+    body { font-family: Arial, sans-serif; margin:0; background:#f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; animation:fadeIn .3s ease; }
     .container { width:360px; background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
     h1 { text-align:center; margin-bottom:20px; }
     input { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:4px; }
-    .button { width:100%; padding:10px; background:#0A84FF; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-top:10px; }
-    .button:hover { background:#006edc; }
-    a { display:block; text-align:center; margin-top:15px; color:#0A84FF; text-decoration:none; }
-    a:hover { text-decoration:underline; }
+    .button { width:100%; padding:10px; background:#000; color:#fff; border:none; border-radius:20px; cursor:pointer; margin-top:10px; }
+    .button:hover { background:#333; }
     select { margin-bottom:10px; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
   </style>
 </head>
 <body>
@@ -31,7 +30,7 @@
         localStorage.setItem('locale', locale);
         fetch(`../../i18n/${locale}.json`)
           .then(res => res.json())
-          .then(setT)
+          .then(data => { setT(data); document.title = data.register || 'Register'; })
           .catch(() => setT({}));
       }, [locale]);
 
@@ -63,7 +62,7 @@
           React.createElement('input', { type:'text', placeholder:t.username, value:username, onChange:e=>setUsername(e.target.value) }),
           React.createElement('input', { type:'password', placeholder:t.password, value:password, onChange:e=>setPassword(e.target.value) }),
           React.createElement('button', { className:'button', onClick:handleRegister }, t.register),
-          React.createElement('a', { href:'../index/index.html' }, t.sign_in_link)
+          React.createElement('button', { className:'button', onClick:() => window.location.href='../index/index.html' }, t.sign_in_link)
         )
       );
     }
