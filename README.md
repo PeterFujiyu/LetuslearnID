@@ -58,6 +58,8 @@ npm run unit
 npm run e2e
 ```
 
+新增 `passkey.test.js` 用于覆盖通行密钥相关接口，运行 `npm test` 会一并执行。
+
 ## API 说明
 
 ### `POST /logout`
