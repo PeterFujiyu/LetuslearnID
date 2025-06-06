@@ -75,4 +75,14 @@ describe('Browser flows', function() {
     assert.strictEqual(profile.status, 200);
     assert.strictEqual(profile.body.username, username);
   });
+
+  it('provides passkey options with token', async function() {
+    const token = await page.evaluate(() => localStorage.getItem('token'));
+    const res = await page.evaluate(async t => {
+      const r = await fetch('/passkey/options', { method:'POST', headers:{ 'Authorization':'Bearer '+t } });
+      return { status: r.status, ok: r.ok };
+    }, token);
+    assert.strictEqual(res.status, 200);
+    assert.ok(res.ok);
+  });
 });

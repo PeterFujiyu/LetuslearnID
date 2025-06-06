@@ -41,27 +41,31 @@ describe('Passkey endpoints', () => {
     assert.strictEqual(res.status, 400);
   });
 
-  it('returns credential_id in profile', async () => {
-    await run("UPDATE users SET credential_id='xyz' WHERE username='pkuser'");
+  it('returns passkey list in profile', async () => {
+    const uid = (await get('SELECT id FROM users WHERE username=?', 'pkuser')).id;
+    await run("INSERT INTO passkeys (user_id, credential_id, public_key, counter) VALUES (?, 'xyz', 'k', 0)", uid);
     const res = await request(app)
       .get('/profile')
       .set('Authorization', 'Bearer ' + token);
     assert.strictEqual(res.status, 200);
-    assert.strictEqual(res.body.credential_id, 'xyz');
+    assert.ok(res.body.passkeys.includes('xyz'));
   });
 
   it('removes existing passkey', async () => {
-    await run("UPDATE users SET credential_id='a', passkey_public='b' WHERE username='pkuser'");
+    const uid = (await get('SELECT id FROM users WHERE username=?', 'pkuser')).id;
+    await run("INSERT INTO passkeys (user_id, credential_id, public_key, counter) VALUES (?, 'a', 'b', 0)", uid);
     const res = await request(app)
       .post('/passkey/remove')
+      .send({ credId: 'a' })
       .set('Authorization', 'Bearer ' + token);
     assert.strictEqual(res.status, 200);
-    const row = await get('SELECT credential_id FROM users WHERE username=?', 'pkuser');
-    assert.strictEqual(row.credential_id, null);
+    const row = await get('SELECT COUNT(*) as c FROM passkeys WHERE credential_id="a"');
+    assert.strictEqual(row.c, 0);
   });
 
   it('provides auth options and fails verification', async () => {
-    await run("UPDATE users SET credential_id='abc', passkey_public='bcd' WHERE username='pkuser'");
+    const uid = (await get('SELECT id FROM users WHERE username=?', 'pkuser')).id;
+    await run("INSERT INTO passkeys (user_id, credential_id, public_key, counter) VALUES (?, 'abc', 'bcd', 0)", uid);
     await request(app)
       .post('/session')
       .set('Authorization', 'Bearer ' + token)
