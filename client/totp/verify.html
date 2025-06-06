@@ -14,12 +14,20 @@
 </head>
 <body>
 <div id="root"></div>
+<script src="../utils/fingerprint.js"></script>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 <script>
 function Verify(){
   const [code,setCode]=React.useState('');
   const [useBackup,setUseBackup]=React.useState(false);
+  const [hasPasskey,setHasPasskey]=React.useState(false);
+  React.useEffect(()=>{
+    const fp=getFingerprint();
+    fetch('/passkey/auth-options',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fingerprint:fp})})
+      .then(r=>setHasPasskey(r.ok))
+      .catch(()=>{});
+  },[]);
   const submit=async()=>{
     const token=sessionStorage.getItem('tfa');
     const res=await fetch('/totp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,code})});
@@ -29,9 +37,10 @@ function Verify(){
   const cancel=()=>{window.location.href='../index/index.html';};
   return React.createElement('div',{className:'box'},[
     React.createElement('input',{key:0,placeholder:'TOTP',value:code,onChange:e=>setCode(e.target.value)}),
-    React.createElement('div',{key:1,className:'gray',onClick:()=>setUseBackup(!useBackup)},'无法访问？使用备份代码。'),
-    React.createElement('button',{key:2,className:'button',onClick:submit},'提交'),
-    React.createElement('button',{key:3,className:'button',onClick:cancel},'取消')
+    hasPasskey && React.createElement('div',{key:1,className:'gray',onClick:()=>window.location.href='../passkey/verify.html'},'Use passkey?'),
+    React.createElement('div',{key:2,className:'gray',onClick:()=>setUseBackup(!useBackup)},'无法访问？使用备份代码。'),
+    React.createElement('button',{key:3,className:'button',onClick:submit},'提交'),
+    React.createElement('button',{key:4,className:'button',onClick:cancel},'取消')
   ]);
 }
 ReactDOM.render(React.createElement(Verify),document.getElementById('root'));
