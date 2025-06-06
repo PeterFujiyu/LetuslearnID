@@ -128,13 +128,26 @@
         window.location.href = '../success/index.html?msg=' + encodeURIComponent('Generate backup codes') + '&next=../settings/index.html';
       };
 
+      const handleLogout = async () => {
+        const token = localStorage.getItem('token');
+        try {
+          await fetch('/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ fingerprint: getFingerprint() })
+          });
+        } catch (e) { }
+        localStorage.removeItem('token');
+        window.location.href = '../index/index.html';
+      };
+
       return (
         React.createElement(React.Fragment, null,
           React.createElement('div', { className:'account', onClick:() => setMenuOpen(!menuOpen) },
             React.createElement('i', { className:'fa-solid fa-user' }), ' ', username
           ),
           menuOpen && React.createElement('div', { className:'menu' },
-            React.createElement('a', { href:'../index/index.html' }, t.logout),
+            React.createElement('a', { href:'#', onClick:handleLogout }, t.logout),
             React.createElement('a', { href:'../manage/index.html' }, t.manage_page),
             bookmarks.map((b,i) => React.createElement('a', { key:i, href:b.url }, b.title))
           ),
@@ -174,7 +187,7 @@
           React.createElement('button', { className:'button', onClick:handleSave },
             React.createElement('i', { className:'fa-solid fa-floppy-disk icon-white' }), t.save
           ),
-          React.createElement('button', { className:'button', onClick:() => window.location.href='../index/index.html' }, t.logout)
+          React.createElement('button', { className:'button', onClick:handleLogout }, t.logout)
         )
       )
     )}

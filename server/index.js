@@ -67,6 +67,11 @@ const getValidSession = async (fingerprint) => {
   return promisify(db.get.bind(db))(query, fingerprint, Date.now());
 };
 
+const deleteSession = async (fingerprint) => {
+  const query = 'DELETE FROM sessions WHERE fingerprint = ?';
+  return promisify(db.run.bind(db))(query, fingerprint);
+};
+
 const createPasskey = async (userId, credId, publicKey, counter) => {
   const q = 'UPDATE users SET credential_id=?, passkey_public=?, counter=? WHERE id=?';
   return promisify(db.run.bind(db))(q, credId, publicKey, counter, userId);
@@ -85,6 +90,8 @@ const updateUserPassword = async (id, passwordHash) => {
 // JWT secret; in production use environment variable
 const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
+const revokedTokens = new Set();
+
 const generateToken = (user, days) => {
   const opts = days && days > 1 && days < 14 ? { expiresIn: `${days}d` } : { expiresIn: '1h' };
   return jwt.sign({ id: user.id, username: user.username }, SECRET, opts);
@@ -94,6 +101,7 @@ const authenticateToken = (req, res, next) => {
   const auth = req.headers['authorization'];
   const token = auth && auth.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Missing token' });
+  if (revokedTokens.has(token)) return res.status(403).json({ error: 'Invalid token' });
   jwt.verify(token, SECRET, (err, user) => {
     if (err) return res.status(403).json({ error: 'Invalid token' });
     req.user = user;
@@ -276,6 +284,21 @@ app.post('/passkey/auth', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: 'Verification failed' });
+  }
+});
+
+app.post('/logout', authenticateToken, async (req, res) => {
+  const { fingerprint } = req.body;
+  if (!fingerprint) return res.status(400).json({ error: 'Missing fingerprint' });
+  try {
+    await deleteSession(fingerprint);
+    const auth = req.headers['authorization'];
+    const token = auth && auth.split(' ')[1];
+    if (token) revokedTokens.add(token);
+    res.json({ message: 'logged out' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

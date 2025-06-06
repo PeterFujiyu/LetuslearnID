@@ -97,3 +97,26 @@ describe('Session persistence', () => {
   });
 });
 
+describe('POST /logout', () => {
+  it('deletes session and rejects old token', async () => {
+    const token = (await request(app).post('/login').send({ username: 'alice', password: 'newpass', rememberDays:2 })).body.token;
+    const fp = 'logoutfp';
+    await request(app)
+      .post('/session')
+      .set('Authorization', 'Bearer ' + token)
+      .send({ fingerprint: fp, days: 2 })
+      .expect(200);
+    await request(app)
+      .post('/logout')
+      .set('Authorization', 'Bearer ' + token)
+      .send({ fingerprint: fp })
+      .expect(200);
+    const auto = await request(app).get('/auto-login').query({ fp });
+    assert.strictEqual(auto.status, 404);
+    const res = await request(app)
+      .get('/profile')
+      .set('Authorization', 'Bearer ' + token);
+    assert.strictEqual(res.status, 403);
+  });
+});
+
