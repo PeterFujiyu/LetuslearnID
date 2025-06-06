@@ -5,10 +5,12 @@
   <title>Manage</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:40px; background:#f5f5f5; }
+    body { font-family: Arial, sans-serif; margin:0; padding:40px; background:#f5f5f5; animation:fadeIn .3s ease; }
     .container { max-width:400px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
     h1 { text-align:center; }
-    a { display:block; margin-top:15px; text-align:center; color:#007bff; }
+    .button { width:100%; padding:10px; background:#000; color:#fff; border:none; border-radius:20px; cursor:pointer; margin-top:15px; }
+    .button:hover { background:#333; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
   </style>
 </head>
 <body>
@@ -24,7 +26,7 @@
         localStorage.setItem('locale', locale);
         fetch(`../../i18n/${locale}.json`)
           .then(res => res.json())
-          .then(setT)
+          .then(data => { setT(data); document.title = data.manage_title || 'Manage'; })
           .catch(() => setT({}));
       }, [locale]);
 
@@ -35,7 +37,7 @@
             React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
           ),
           React.createElement('h1', null, t.manage_title),
-          React.createElement('a', { href:'../settings/index.html' }, t.settings_title)
+          React.createElement('button', { className:'button', onClick:() => window.location.href='../settings/index.html' }, t.settings_title)
         )
       );
     }

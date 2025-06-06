@@ -5,22 +5,23 @@
   <title>Account Settings</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:40px; background:#f5f5f5; position:relative; }
+    body { font-family: Arial, sans-serif; margin:0; padding:40px; background:#f5f5f5; position:relative; animation:fadeIn .3s ease; }
     .container { max-width:400px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
     h1 { text-align:center; }
     input { width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:4px; }
-    .button { width:100%; padding:10px; background:#007bff; color:#fff; border:none; border-radius:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:5px; }
-    .button:hover { background:#0056b3; }
-    .secondary { background:#6c757d; }
-    .secondary:hover { background:#545b62; }
+    .button { width:100%; padding:10px; background:#000; color:#fff; border:none; border-radius:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-top:5px; }
+    .button:hover { background:#333; }
+    .secondary { background:#666; }
+    .secondary:hover { background:#555; }
     .icon-white { color:#fff; margin-right:8px; }
     label { display:block; margin-top:10px; }
     select { margin-bottom:10px; }
     a.logout { display:block; margin-top:15px; text-align:center; color:#007bff; }
     .account { position:absolute; top:10px; right:10px; cursor:pointer; }
-    .menu { position:absolute; top:30px; right:0; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:10; }
+    .menu { position:absolute; top:30px; right:0; background:#fff; border:1px solid #ccc; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.1); z-index:10; animation:fadeIn .3s ease; }
     .menu a { display:block; padding:5px 10px; color:#333; text-decoration:none; white-space:nowrap; }
     .menu a:hover { background:#f0f0f0; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(-5px); } to { opacity:1; transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -59,7 +60,7 @@
         localStorage.setItem('locale', locale);
         fetch(`../../i18n/${locale}.json`)
           .then(res => res.json())
-          .then(setT)
+          .then(data => { setT(data); document.title = data.settings_title || 'Settings'; })
           .catch(() => setT({}));
       }, [locale]);
 
@@ -130,7 +131,7 @@
           React.createElement('button', { className:'button', onClick:handleSave },
             React.createElement('i', { className:'fa-solid fa-floppy-disk icon-white' }), t.save
           ),
-          React.createElement('a', { href:'../index/index.html', className:'logout' }, t.logout)
+          React.createElement('button', { className:'button', onClick:() => window.location.href='../index/index.html' }, t.logout)
         )
       );
     }
