@@ -10,10 +10,20 @@ The following table describes a simple relational schema for storing user accoun
 | `email`             | VARCHAR       | User email address                               |
 | `totp_secret`       | VARCHAR       | Secret used for TOTP authenticator apps |
 | `backup_codes`      | TEXT          | JSON array of one‑time backup codes |
-| `credential_id`     | TEXT          | Credential ID of registered passkey |
-| `passkey_public`    | TEXT          | Public key data for passkeys (WebAuthn) |
-| `counter`           | INTEGER       | WebAuthn signature counter |
+| `credential_id`     | TEXT          | *(deprecated)* |
+| `passkey_public`    | TEXT          | *(deprecated)* |
+| `counter`           | INTEGER       | *(deprecated)* |
 | `created_at`        | DATETIME      | Record creation time                             |
 | `updated_at`        | DATETIME      | Last update time                                 |
 
 This design allows storage of password changes, email updates, two‑factor settings, passkeys and single‑use backup codes for account recovery.
+
+## Passkeys Table
+
+| Column name   | Type       | Description |
+|---------------|-----------|-------------|
+| `id`          | INTEGER PK| Unique key identifier |
+| `user_id`     | INTEGER   | Owner user id |
+| `credential_id` | TEXT    | Credential ID for WebAuthn |
+| `public_key`  | TEXT      | Stored public key |
+| `counter`     | INTEGER   | Signature counter |

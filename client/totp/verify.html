@@ -23,9 +23,11 @@ function Verify(){
   const [useBackup,setUseBackup]=React.useState(false);
   const [hasPasskey,setHasPasskey]=React.useState(false);
   React.useEffect(()=>{
-    const fp=getFingerprint();
-    fetch('/passkey/auth-options',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fingerprint:fp})})
-      .then(r=>setHasPasskey(r.ok))
+    const token=sessionStorage.getItem('tfa');
+    if(!token)return;
+    fetch('/profile',{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{if(d&&d.passkeys&&d.passkeys.length)setHasPasskey(true);})
       .catch(()=>{});
   },[]);
   const submit=async()=>{

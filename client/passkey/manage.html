@@ -22,7 +22,7 @@ function Manage(){
   React.useEffect(()=>{
     const token=localStorage.getItem('token');
     fetch('/profile',{headers:{'Authorization':'Bearer '+token}})
-      .then(r=>r.json()).then(d=>setEnabled(!!d.credential_id)).catch(()=>{});
+      .then(r=>r.json()).then(d=>setEnabled(d.passkeys&&d.passkeys.length>0)).catch(()=>{});
   },[]);
   const b64ToBuf=str=>Uint8Array.from(atob(str.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
   const enable=async()=>{

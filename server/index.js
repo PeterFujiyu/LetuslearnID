@@ -32,11 +32,15 @@ const initDb = () => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
     password_hash TEXT,
-    credential_id TEXT,
-    passkey_public TEXT,
-    counter INTEGER DEFAULT 0,
     totp_secret TEXT,
     backup_codes TEXT
+  )`;
+  const passkeyQuery = `CREATE TABLE IF NOT EXISTS passkeys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    credential_id TEXT UNIQUE,
+    public_key TEXT,
+    counter INTEGER DEFAULT 0
   )`;
   const sessionQuery = `CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,6 +54,7 @@ const initDb = () => {
   ];
   return Promise.all([
     promisify(db.run.bind(db))(query),
+    promisify(db.run.bind(db))(passkeyQuery),
     promisify(db.run.bind(db))(sessionQuery),
     ...alters.map(a => promisify(db.run.bind(db))(a).catch(() => {}))
   ]);
@@ -80,14 +85,33 @@ const deleteSession = async (fingerprint) => {
   return promisify(db.run.bind(db))(query, fingerprint);
 };
 
-const createPasskey = async (userId, credId, publicKey, counter) => {
-  const q = 'UPDATE users SET credential_id=?, passkey_public=?, counter=? WHERE id=?';
-  return promisify(db.run.bind(db))(q, credId, publicKey, counter, userId);
+const addPasskey = async (userId, credId, publicKey, counter) => {
+  const q = 'INSERT INTO passkeys (user_id, credential_id, public_key, counter) VALUES (?,?,?,?)';
+  return promisify(db.run.bind(db))(q, userId, credId, publicKey, counter);
 };
 
-const getUserByCredId = async (credId) => {
-  const q = 'SELECT * FROM users WHERE credential_id = ?';
+const getPasskeysByUser = async (userId) => {
+  const q = 'SELECT * FROM passkeys WHERE user_id=?';
+  return promisify(db.all.bind(db))(q, userId);
+};
+
+const getPasskeyByCredId = async (credId) => {
+  const q = 'SELECT * FROM passkeys WHERE credential_id=?';
   return promisify(db.get.bind(db))(q, credId);
+};
+
+const updatePasskeyCounter = async (credId, counter) => {
+  const q = 'UPDATE passkeys SET counter=? WHERE credential_id=?';
+  return promisify(db.run.bind(db))(q, counter, credId);
+};
+
+const removePasskey = async (userId, credId) => {
+  if (credId) {
+    const q = 'DELETE FROM passkeys WHERE user_id=? AND credential_id=?';
+    return promisify(db.run.bind(db))(q, userId, credId);
+  }
+  const q = 'DELETE FROM passkeys WHERE user_id=?';
+  return promisify(db.run.bind(db))(q, userId);
 };
 
 const updateUserPassword = async (id, passwordHash) => {
@@ -183,11 +207,12 @@ app.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await getUserByUsername(req.user.username);
     if (!user) return res.status(404).json({ error: 'User not found' });
+    const keys = await getPasskeysByUser(user.id);
     res.json({
       id: user.id,
       username: user.username,
       totp: !!user.totp_secret,
-      credential_id: user.credential_id
+      passkeys: keys.map(k => k.credential_id)
     });
   } catch (err) {
     console.error(err);
@@ -382,11 +407,13 @@ app.post('/session', authenticateToken, async (req, res) => {
 app.post('/passkey/options', authenticateToken, async (req, res) => {
   try {
     const user = await getUserByUsername(req.user.username);
+    const existing = await getPasskeysByUser(user.id);
     const options = await generateRegistrationOptions({
       rpName: 'LetuslearnID',
       rpID: req.headers.host.split(':')[0],
       userID: Buffer.from(String(user.id)),
-      userName: user.username
+      userName: user.username,
+      excludeCredentials: existing.map(k => ({ id: Buffer.from(k.credential_id, 'base64url'), type:'public-key' }))
     });
     challenges[user.username] = options.challenge;
     res.json(options);
@@ -411,7 +438,7 @@ app.post('/passkey/register', authenticateToken, async (req, res) => {
       expectedRPID: req.headers.host.split(':')[0]
     });
     const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
-    await createPasskey(
+    await addPasskey(
       req.user.id,
       credentialID.toString('base64url'),
       credentialPublicKey.toString('base64'),
@@ -431,11 +458,11 @@ app.post('/passkey/auth-options', async (req, res) => {
   try {
     const sess = await getValidSession(fingerprint);
     if (!sess) return res.status(404).json({ error: 'Not found' });
-    const user = await promisify(db.get.bind(db))('SELECT * FROM users WHERE id = ?', sess.user_id);
-    if (!user || !user.credential_id) return res.status(404).json({ error: 'No passkey' });
+    const keys = await getPasskeysByUser(sess.user_id);
+    if (!keys.length) return res.status(404).json({ error: 'No passkey' });
     const options = generateAuthenticationOptions({
       rpID: req.headers.host.split(':')[0],
-      allowCredentials: [{ id: Buffer.from(user.credential_id, 'base64url'), type: 'public-key' }]
+      allowCredentials: keys.map(k => ({ id: Buffer.from(k.credential_id, 'base64url'), type: 'public-key' }))
     });
     challenges[fingerprint] = { challenge: options.challenge, sess };
     res.json(options);
@@ -455,20 +482,21 @@ app.post('/passkey/auth', async (req, res) => {
     return res.status(400).json({ error: 'Missing credential data' });
   }
   try {
-    const user = await getUserByCredId(Buffer.from(rawId, 'base64').toString('base64url'));
-    if (!user) return res.status(404).json({ error: 'Unknown credential' });
+    const key = await getPasskeyByCredId(Buffer.from(rawId, 'base64').toString('base64url'));
+    if (!key) return res.status(404).json({ error: 'Unknown credential' });
+    const user = await promisify(db.get.bind(db))('SELECT * FROM users WHERE id = ?', key.user_id);
     const verification = await verifyAuthenticationResponse({
       response: req.body,
       expectedChallenge: data.challenge,
       expectedOrigin: `http://${req.headers.host}`,
       expectedRPID: req.headers.host.split(':')[0],
       authenticator: {
-        credentialID: Buffer.from(user.credential_id, 'base64url'),
-        credentialPublicKey: Buffer.from(user.passkey_public, 'base64'),
-        counter: user.counter
+        credentialID: Buffer.from(key.credential_id, 'base64url'),
+        credentialPublicKey: Buffer.from(key.public_key, 'base64'),
+        counter: key.counter
       }
     });
-    await createPasskey(user.id, user.credential_id, user.passkey_public, verification.authenticationInfo.newCounter);
+    await updatePasskeyCounter(key.credential_id, verification.authenticationInfo.newCounter);
     const daysLeft = Math.max(1, Math.round((data.sess.expires_at - Date.now()) / 86400000));
     const token = generateToken(user, daysLeft);
     delete challenges[fingerprint];
@@ -480,8 +508,9 @@ app.post('/passkey/auth', async (req, res) => {
 });
 
 app.post('/passkey/remove', authenticateToken, async (req, res) => {
+  const { credId } = req.body || {};
   try {
-    await createPasskey(req.user.id, null, null, 0);
+    await removePasskey(req.user.id, credId);
     res.json({ message: 'removed' });
   } catch (err) {
     console.error(err);
