@@ -183,7 +183,12 @@ app.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await getUserByUsername(req.user.username);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ id: user.id, username: user.username, totp: !!user.totp_secret });
+    res.json({
+      id: user.id,
+      username: user.username,
+      totp: !!user.totp_secret,
+      credential_id: user.credential_id
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

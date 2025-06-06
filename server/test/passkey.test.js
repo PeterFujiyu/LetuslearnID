@@ -41,6 +41,15 @@ describe('Passkey endpoints', () => {
     assert.strictEqual(res.status, 400);
   });
 
+  it('returns credential_id in profile', async () => {
+    await run("UPDATE users SET credential_id='xyz' WHERE username='pkuser'");
+    const res = await request(app)
+      .get('/profile')
+      .set('Authorization', 'Bearer ' + token);
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.credential_id, 'xyz');
+  });
+
   it('removes existing passkey', async () => {
     await run("UPDATE users SET credential_id='a', passkey_public='b' WHERE username='pkuser'");
     const res = await request(app)
