@@ -88,6 +88,7 @@ describe('POST /change-password', () => {
     assert.strictEqual(r.status, 200);
     const { secret, codes } = r.body;
     global.secret = secret;
+    global.codes = codes;
     const otp = require('otplib').authenticator.generate(secret);
     r = await request(app)
       .post('/login')
@@ -100,6 +101,7 @@ describe('POST /change-password', () => {
     global.token = verify.body.token;
   });
 });
+
 
 describe('Session persistence', () => {
   it('saves session settings and performs auto login', async () => {
@@ -142,6 +144,48 @@ describe('POST /logout', () => {
       .get('/profile')
       .set('Authorization', 'Bearer ' + token);
     assert.strictEqual(res.status, 403);
+  });
+});
+
+describe('TOTP and backup codes', () => {
+  it('allows login using a backup code once', async () => {
+    let r = await request(app).post('/login').send({ username: 'alice', password: 'newpass' });
+    assert.strictEqual(r.body.tfa, true);
+    const verify = await request(app)
+      .post('/totp/verify')
+      .send({ token: r.body.temp, code: global.codes[0] });
+    assert.ok(verify.body.token);
+    global.token = verify.body.token;
+
+    r = await request(app).post('/login').send({ username: 'alice', password: 'newpass' });
+    const repeat = await request(app)
+      .post('/totp/verify')
+      .send({ token: r.body.temp, code: global.codes[0] });
+    assert.strictEqual(repeat.status, 401);
+  });
+
+  it('regenerates backup codes with totp code', async () => {
+    const otp = require('otplib').authenticator.generate(global.secret);
+    const res = await request(app)
+      .post('/totp/regenerate')
+      .set('Authorization', 'Bearer ' + global.token)
+      .send({ code: otp });
+    assert.strictEqual(res.status, 200);
+    assert.ok(Array.isArray(res.body.codes));
+    assert.strictEqual(res.body.codes.length, 12);
+    assert.notStrictEqual(res.body.codes[0], global.codes[0]);
+    global.codes = res.body.codes;
+  });
+
+  it('disables totp using backup code', async () => {
+    const res = await request(app)
+      .post('/totp/disable')
+      .set('Authorization', 'Bearer ' + global.token)
+      .send({ code: global.codes[0] });
+    assert.strictEqual(res.status, 200);
+    let r = await request(app).post('/login').send({ username: 'alice', password: 'newpass' });
+    assert.ok(r.body.token);
+    global.token = r.body.token;
   });
 });
 
