@@ -26,6 +26,7 @@
 </head>
 <body>
   <div id="root"></div>
+  <script src="../utils/fingerprint.js"></script>
   <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
   <script>
@@ -36,6 +37,10 @@
       const [oldPassword, setOldPassword] = React.useState('');
       const [newPassword, setNewPassword] = React.useState('');
       const [confirmPassword, setConfirmPassword] = React.useState('');
+      const [showOld, setShowOld] = React.useState(false);
+      const [showNew, setShowNew] = React.useState(false);
+      const [showConfirm, setShowConfirm] = React.useState(false);
+      const [sessionDays, setSessionDays] = React.useState(2);
       const [twoFactor, setTwoFactor] = React.useState(false);
       const [passkey, setPasskey] = React.useState(false);
       const [username, setUsername] = React.useState('');
@@ -64,7 +69,15 @@
           .catch(() => setT({}));
       }, [locale]);
 
-      const handleSave = () => {
+      const handleSave = async () => {
+        const token = localStorage.getItem('token');
+        try {
+          await fetch('/session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ fingerprint: getFingerprint(), days: Number(sessionDays) })
+          });
+        } catch (e) { }
         window.location.href = '../success/index.html?msg=' + encodeURIComponent('Saved settings') + '&next=../settings/index.html';
       };
 
@@ -115,9 +128,18 @@
           React.createElement('button', { className:'button', onClick:() => window.location.href = '../success/index.html?msg=' + encodeURIComponent(t.change_email) + '&next=../settings/index.html' },
             React.createElement('i', { className:'fa-solid fa-envelope icon-white' }), t.change_email
           ),
-          React.createElement('input', { type:'password', placeholder:t.current_password, value:oldPassword, onChange:e=>setOldPassword(e.target.value) }),
-          React.createElement('input', { type:'password', placeholder:t.new_password, value:newPassword, onChange:e=>setNewPassword(e.target.value) }),
-          React.createElement('input', { type:'password', placeholder:t.confirm_password, value:confirmPassword, onChange:e=>setConfirmPassword(e.target.value) }),
+          React.createElement('div', { style:{position:'relative'} },
+            React.createElement('input', { type:showOld?'text':'password', placeholder:t.current_password, value:oldPassword, onChange:e=>setOldPassword(e.target.value), onCopy:e=>e.preventDefault() }),
+            React.createElement('i', { className:'fa-solid ' + (showOld?'fa-eye-slash':'fa-eye'), onClick:()=>setShowOld(!showOld), style:{position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', cursor:'pointer'} })
+          ),
+          React.createElement('div', { style:{position:'relative'} },
+            React.createElement('input', { type:showNew?'text':'password', placeholder:t.new_password, value:newPassword, onChange:e=>setNewPassword(e.target.value), onCopy:e=>e.preventDefault() }),
+            React.createElement('i', { className:'fa-solid ' + (showNew?'fa-eye-slash':'fa-eye'), onClick:()=>setShowNew(!showNew), style:{position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', cursor:'pointer'} })
+          ),
+          React.createElement('div', { style:{position:'relative'} },
+            React.createElement('input', { type:showConfirm?'text':'password', placeholder:t.confirm_password, value:confirmPassword, onChange:e=>setConfirmPassword(e.target.value), onCopy:e=>e.preventDefault() }),
+            React.createElement('i', { className:'fa-solid ' + (showConfirm?'fa-eye-slash':'fa-eye'), onClick:()=>setShowConfirm(!showConfirm), style:{position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', cursor:'pointer'} })
+          ),
           React.createElement('button', { className:'button', onClick:handleChangePassword }, t.change_password),
           React.createElement('label', null,
             React.createElement('input', { type:'checkbox', checked:twoFactor, onChange:e=>setTwoFactor(e.target.checked) }), ' ', t.twofactor
@@ -125,6 +147,7 @@
           React.createElement('label', null,
             React.createElement('input', { type:'checkbox', checked:passkey, onChange:e=>setPasskey(e.target.checked) }), ' ', t.passkeys
           ),
+          React.createElement('input', { type:'number', min:2, max:13, value:sessionDays, onChange:e=>setSessionDays(e.target.value), placeholder:t.remember_days }),
           React.createElement('button', { className:'button secondary', onClick:handleBackupCodes },
             React.createElement('i', { className:'fa-solid fa-shield-halved icon-white' }), t.backup_codes
           ),

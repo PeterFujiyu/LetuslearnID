@@ -25,7 +25,16 @@ const initDb = () => {
     username TEXT UNIQUE,
     password_hash TEXT
   )`;
-  return promisify(db.run.bind(db))(query);
+  const sessionQuery = `CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    fingerprint TEXT,
+    expires_at INTEGER
+  )`;
+  return Promise.all([
+    promisify(db.run.bind(db))(query),
+    promisify(db.run.bind(db))(sessionQuery)
+  ]);
 };
 
 const getUserByUsername = async (username) => {
@@ -36,6 +45,16 @@ const getUserByUsername = async (username) => {
 const createUser = async (username, passwordHash) => {
   const query = 'INSERT INTO users (username, password_hash) VALUES (?, ?)';
   return promisify(db.run.bind(db))(query, username, passwordHash);
+};
+
+const createSession = async (userId, fingerprint, expiresAt) => {
+  const query = 'INSERT INTO sessions (user_id, fingerprint, expires_at) VALUES (?,?,?)';
+  return promisify(db.run.bind(db))(query, userId, fingerprint, expiresAt);
+};
+
+const getValidSession = async (fingerprint) => {
+  const query = 'SELECT * FROM sessions WHERE fingerprint = ? AND expires_at > ? ORDER BY expires_at DESC LIMIT 1';
+  return promisify(db.get.bind(db))(query, fingerprint, Date.now());
 };
 
 const updateUserPassword = async (id, passwordHash) => {
@@ -82,7 +101,7 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-  const { username, password, rememberDays } = req.body;
+  const { username, password, rememberDays, fingerprint } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
   }
@@ -95,7 +114,14 @@ app.post('/login', async (req, res) => {
     if (!match) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    const token = generateToken(user, rememberDays);
+    let days = rememberDays;
+    if (fingerprint) {
+      const sess = await getValidSession(fingerprint);
+      if (sess && sess.user_id === user.id) {
+        days = Math.max(1, Math.round((sess.expires_at - Date.now()) / 86400000));
+      }
+    }
+    const token = generateToken(user, days);
     res.json({ token });
   } catch (err) {
     console.error(err);
@@ -127,6 +153,36 @@ app.post('/change-password', authenticateToken, async (req, res) => {
     const hash = await bcrypt.hash(newPassword, 10);
     await updateUserPassword(user.id, hash);
     res.json({ message: 'Password changed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/session', authenticateToken, async (req, res) => {
+  const { fingerprint, days } = req.body;
+  if (!fingerprint || !days) return res.status(400).json({ error: 'Missing data' });
+  const expiresAt = Date.now() + Number(days) * 86400000;
+  try {
+    await createSession(req.user.id, fingerprint, expiresAt);
+    res.json({ message: 'session saved' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/auto-login', async (req, res) => {
+  const { fp } = req.query;
+  if (!fp) return res.status(400).json({ error: 'Missing fingerprint' });
+  try {
+    const sess = await getValidSession(fp);
+    if (!sess) return res.status(404).json({ error: 'Not found' });
+    const user = await promisify(db.get.bind(db))('SELECT * FROM users WHERE id = ?', sess.user_id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const daysLeft = Math.max(1, Math.round((sess.expires_at - Date.now()) / 86400000));
+    const token = generateToken(user, daysLeft);
+    res.json({ token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

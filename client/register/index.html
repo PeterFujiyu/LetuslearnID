@@ -21,9 +21,8 @@
   <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
   <script>
-    function Register() {
-      const [username, setUsername] = React.useState('');
-      const [password, setPassword] = React.useState('');
+    function RegisterName() {
+      const [username, setUsername] = React.useState(sessionStorage.getItem('reg_name') || '');
       const [locale, setLocale] = React.useState(localStorage.getItem('locale') || 'en_us');
       const [t, setT] = React.useState({});
 
@@ -35,22 +34,9 @@
           .catch(() => setT({}));
       }, [locale]);
 
-      const handleRegister = async () => {
-        try {
-          const res = await fetch('/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-          });
-          const data = await res.json();
-          if (res.ok) {
-            window.location.href = '../success/index.html?type=register';
-          } else {
-            window.location.href = `../failure/index.html?msg=${encodeURIComponent(data.error || 'Register failed')}`;
-          }
-        } catch (err) {
-          window.location.href = '../failure/index.html?msg=Register%20error';
-        }
+      const next = () => {
+        sessionStorage.setItem('reg_name', username);
+        window.location.href = './password.html';
       };
 
       return (
@@ -61,15 +47,14 @@
           ),
           React.createElement('h1', null, t.register),
           React.createElement('input', { type:'text', placeholder:t.username, value:username, onChange:e=>setUsername(e.target.value) }),
-          React.createElement('input', { type:'password', placeholder:t.password, value:password, onChange:e=>setPassword(e.target.value) }),
-          React.createElement('button', { className:'button', onClick:handleRegister }, t.register),
+          React.createElement('button', { className:'button', onClick:next }, t.continue),
           React.createElement('p', { className:'tip' },
             React.createElement('a', { href:'../index/index.html' }, t.have_account)
           )
         )
       );
     }
-    ReactDOM.render(React.createElement(Register), document.getElementById('root'));
+    ReactDOM.render(React.createElement(RegisterName), document.getElementById('root'));
   </script>
 </body>
 </html>
