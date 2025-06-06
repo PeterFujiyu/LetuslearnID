@@ -23,10 +23,12 @@ function Codes(){
     const blob=new Blob([codes.join('\n')],{type:'text/markdown'});
     const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup_codes.md';a.click();
   };
-  return React.createElement('div',{className:'box'},[
-    React.createElement('ul',{key:0},codes.map((c,i)=>React.createElement('li',{key:i},c))),
-    React.createElement('button',{key:1,className:'button',onClick:download},'下载')
-  ]);
+    return React.createElement('div',{className:'box'},[
+      React.createElement('ul',{key:0},codes.map((c,i)=>React.createElement('li',{key:i},c))),
+      React.createElement('button',{key:1,className:'button',onClick:download},'下载'),
+      React.createElement('button',{key:2,className:'button',onClick:()=>window.location.href='../settings/index.html'},'取消'),
+      React.createElement('button',{key:3,className:'button',onClick:()=>window.location.href='../success/index.html?msg=Success&next=../settings/index.html'},'确认')
+    ]);
 }
 ReactDOM.render(React.createElement(Codes),document.getElementById('root'));
 </script>
