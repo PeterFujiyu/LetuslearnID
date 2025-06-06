@@ -377,10 +377,10 @@ app.post('/session', authenticateToken, async (req, res) => {
 app.post('/passkey/options', authenticateToken, async (req, res) => {
   try {
     const user = await getUserByUsername(req.user.username);
-    const options = generateRegistrationOptions({
+    const options = await generateRegistrationOptions({
       rpName: 'LetuslearnID',
       rpID: req.headers.host.split(':')[0],
-      userID: String(user.id),
+      userID: Buffer.from(String(user.id)),
       userName: user.username
     });
     challenges[user.username] = options.challenge;
