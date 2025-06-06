@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TOTP Confirm</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;animation:fadeIn .3s ease;}
+    .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-align:center;width:360px;}
+    input{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:4px;}
+    .button{width:100%;padding:10px;background:#000;color:#fff;border:none;border-radius:20px;cursor:pointer;margin-top:10px;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../utils/fingerprint.js"></script>
+<script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+<script>
+function Confirm(){
+  const [code,setCode]=React.useState('');
+  const action=sessionStorage.getItem('totpAction');
+  const submit=async()=>{
+    const token=localStorage.getItem('token');
+    let url='/totp/check';
+    if(action==='disable') url='/totp/disable';
+    if(action==='update') url='/totp/update';
+    if(action==='regenerate') url='/totp/regenerate';
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({code})});
+    const data=await res.json();
+    if(res.ok){
+      if(action==='update'){
+        sessionStorage.setItem('totpSetup',JSON.stringify(data));
+        sessionStorage.setItem('totpAction','verify');
+        window.location.href='setup.html';
+      }else if(action==='regenerate'){
+        sessionStorage.setItem('totpCodes',JSON.stringify(data.codes));
+        window.location.href='backup.html';
+      }else{
+        window.location.href='../success/index.html?msg=Success&next=../settings/index.html';
+      }
+    }else{
+      window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
+    }
+  };
+  return React.createElement('div',{className:'box'},[
+    React.createElement('input',{key:0,placeholder:'TOTP',value:code,onChange:e=>setCode(e.target.value)}),
+    React.createElement('button',{key:1,className:'button',onClick:submit},'提交')
+  ]);
+}
+ReactDOM.render(React.createElement(Confirm),document.getElementById('root'));
+</script>
+</body>
+</html>

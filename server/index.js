@@ -217,6 +217,25 @@ const genCodes = () => {
   return arr;
 };
 
+const verifyTotp = async (user, code) => {
+  let valid = authenticator.verify({ token: code, secret: user.totp_secret });
+  let codes = [];
+  if (!valid && user.backup_codes) {
+    codes = JSON.parse(user.backup_codes);
+    const idx = codes.indexOf(code);
+    if (idx > -1) {
+      valid = true;
+      codes.splice(idx, 1);
+      await updateBackupCodes(user.id, JSON.stringify(codes));
+    }
+  }
+  return valid;
+};
+
+const disableTotp = async (id) => {
+  await setTotpSecret(id, null, null);
+};
+
 app.post('/totp/setup', authenticateToken, async (req, res) => {
   try {
     const secret = authenticator.generateSecret();
@@ -266,10 +285,76 @@ app.post('/totp/verify', async (req, res) => {
 });
 
 app.post('/totp/regenerate', authenticateToken, async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'Missing code' });
   try {
+    const user = await getUserByUsername(req.user.username);
+    if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
+    const valid = await verifyTotp(user, code);
+    if (!valid) return res.status(401).json({ error: 'Invalid code' });
     const codes = genCodes();
     await updateBackupCodes(req.user.id, JSON.stringify(codes));
     res.json({ codes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/totp/check', authenticateToken, async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'Missing code' });
+  try {
+    const user = await getUserByUsername(req.user.username);
+    if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
+    const valid = await verifyTotp(user, code);
+    if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    res.json({ message: 'ok' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/totp/cancel', authenticateToken, async (req, res) => {
+  try {
+    await disableTotp(req.user.id);
+    res.json({ message: 'cancelled' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/totp/disable', authenticateToken, async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'Missing code' });
+  try {
+    const user = await getUserByUsername(req.user.username);
+    if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
+    const valid = await verifyTotp(user, code);
+    if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    await disableTotp(user.id);
+    res.json({ message: 'disabled' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/totp/update', authenticateToken, async (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: 'Missing code' });
+  try {
+    const user = await getUserByUsername(req.user.username);
+    if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
+    const valid = await verifyTotp(user, code);
+    if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    const secret = authenticator.generateSecret();
+    const url = authenticator.keyuri(req.user.username, 'LetuslearnID', secret);
+    const codes = genCodes();
+    await setTotpSecret(user.id, secret, JSON.stringify(codes));
+    res.json({ secret, url, codes });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -373,6 +458,16 @@ app.post('/passkey/auth', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: 'Verification failed' });
+  }
+});
+
+app.post('/passkey/remove', authenticateToken, async (req, res) => {
+  try {
+    await createPasskey(req.user.id, null, null, 0);
+    res.json({ message: 'removed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
