@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Passkey Verify</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;animation:fadeIn .3s ease;}
+    .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-align:center;width:360px;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</head>
+<body>
+<div id="root">Processing...</div>
+<script src="../utils/fingerprint.js"></script>
+<script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+<script>
+function VerifyPasskey(){
+  React.useEffect(()=>{
+    (async()=>{
+      const fp=getFingerprint();
+      const optRes=await fetch('/passkey/auth-options',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fingerprint:fp})});
+      if(!optRes.ok){
+        window.location.href='../failure/index.html?msg=No%20passkey';
+        return;
+      }
+      const opts=await optRes.json();
+      const b64ToBuf=str=>Uint8Array.from(atob(str.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+      const bufToB64=buf=>btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      opts.challenge=b64ToBuf(opts.challenge);
+      opts.allowCredentials=opts.allowCredentials.map(c=>({...c,id:b64ToBuf(c.id)}));
+      const cred=await navigator.credentials.get({publicKey:opts});
+      const body={
+        id:cred.id,
+        rawId:bufToB64(cred.rawId),
+        response:{
+          authenticatorData:bufToB64(cred.response.authenticatorData),
+          clientDataJSON:bufToB64(cred.response.clientDataJSON),
+          signature:bufToB64(cred.response.signature),
+          userHandle:cred.response.userHandle?bufToB64(cred.response.userHandle):null
+        },
+        type:cred.type
+      };
+      const vr=await fetch('/passkey/auth?fingerprint='+encodeURIComponent(fp),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const data=await vr.json();
+      if(vr.ok&&data.token){
+        localStorage.setItem('token',data.token);
+        window.location.href='../manage/index.html';
+      }else{
+        window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
+      }
+    })();
+  },[]);
+  return React.createElement('div',{className:'box'},'');
+}
+ReactDOM.render(React.createElement(VerifyPasskey),document.getElementById('root'));
+</script>
+</body>
+</html>
