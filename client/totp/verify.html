@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TOTP Verify</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;animation:fadeIn .3s ease;}
+    .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-align:center;width:360px;}
+    input{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:4px;}
+    .gray{color:#666;font-size:0.9em;cursor:pointer;margin-bottom:10px;}
+    .button{width:100%;padding:10px;background:#000;color:#fff;border:none;border-radius:20px;cursor:pointer;margin-top:10px;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+<script>
+function Verify(){
+  const [code,setCode]=React.useState('');
+  const [useBackup,setUseBackup]=React.useState(false);
+  const submit=async()=>{
+    const token=sessionStorage.getItem('tfa');
+    const res=await fetch('/totp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,code})});
+    const data=await res.json();
+    if(res.ok){localStorage.setItem('token',data.token);window.location.href='../manage/index.html';}else{window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Verify failed');}
+  };
+  return React.createElement('div',{className:'box'},[
+    React.createElement('input',{key:0,placeholder:'TOTP',value:code,onChange:e=>setCode(e.target.value)}),
+    React.createElement('div',{key:1,className:'gray',onClick:()=>setUseBackup(!useBackup)},'无法访问？使用备份代码。'),
+    React.createElement('button',{key:2,className:'button',onClick:submit},'提交')
+  ]);
+}
+ReactDOM.render(React.createElement(Verify),document.getElementById('root'));
+</script>
+</body>
+</html>

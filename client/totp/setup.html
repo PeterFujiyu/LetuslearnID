@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TOTP Setup</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;animation:fadeIn .3s ease;}
+    .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-align:center;width:360px;}
+    .gray{color:#666;font-size:0.9em;cursor:pointer;}
+    pre{background:#eee;padding:10px;border-radius:4px;white-space:pre-wrap;word-break:break-all;}
+    ul{list-style:none;padding:0;}
+    li{background:#eee;margin:4px 0;padding:4px;border-radius:4px;}
+    .button{width:100%;padding:10px;background:#000;color:#fff;border:none;border-radius:20px;cursor:pointer;margin-top:10px;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+<script>
+function Setup(){
+  const data = JSON.parse(sessionStorage.getItem('totpSetup')||'{}');
+  const [show, setShow] = React.useState(false);
+  const download = () => {
+    const blob = new Blob([data.codes.join('\n')], {type:'text/markdown'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'backup_codes.md';
+    a.click();
+  };
+  return React.createElement('div',{className:'box'},[
+    React.createElement('img',{key:0,src:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(data.url)}),
+    React.createElement('div',{key:1,className:'gray',onClick:()=>setShow(!show)},'无法使用？复制代码。'),
+    show && React.createElement('pre',{key:2},data.secret),
+    React.createElement('p',{key:3},'请使用双因子认证器扫描下方二维码\n如「Google Authenticator」「1Password」等'),
+    React.createElement('ul',{key:4},data.codes.map((c,i)=>React.createElement('li',{key:i},c))),
+    React.createElement('button',{key:5,className:'button',onClick:download},'下载备份代码')
+  ]);
+}
+ReactDOM.render(React.createElement(Setup),document.getElementById('root'));
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 # LetuslearnID
 
 LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](https://expressjs.com/) 实现。为了减少内存占用，默认使用 SQLite 存储用户数据，同时提供 React 前端页面及多语言支持。
+现在支持 TOTP 双因素认证，生成二维码与 12 个一次性备用代码，启用后登录需输入动态口令或备用代码。
 
 ## 目录结构
 

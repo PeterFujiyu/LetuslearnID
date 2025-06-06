@@ -42,6 +42,7 @@
       const [showConfirm, setShowConfirm] = React.useState(false);
       const [sessionDays, setSessionDays] = React.useState(2);
       const [twoFactor, setTwoFactor] = React.useState(false);
+      const [origTwoFactor, setOrigTwoFactor] = React.useState(false);
       const [passkey, setPasskey] = React.useState(false);
       const [username, setUsername] = React.useState('');
       const [menuOpen, setMenuOpen] = React.useState(false);
@@ -56,7 +57,7 @@
         if (token) {
           fetch('/profile', { headers: { 'Authorization': 'Bearer ' + token } })
             .then(res => res.json())
-            .then(data => setUsername(data.username || ''))
+            .then(data => { setUsername(data.username || ''); setTwoFactor(!!data.totp); setOrigTwoFactor(!!data.totp); })
             .catch(() => {});
         }
       }, []);
@@ -77,6 +78,13 @@
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ fingerprint: getFingerprint(), days: Number(sessionDays) })
           });
+          if (twoFactor && !origTwoFactor) {
+            const res = await fetch('/totp/setup', { method:'POST', headers:{ 'Authorization':'Bearer '+token } });
+            const data = await res.json();
+            sessionStorage.setItem('totpSetup', JSON.stringify(data));
+            window.location.href = '../totp/setup.html';
+            return;
+          }
           if (passkey) {
             const optRes = await fetch('/passkey/options', { method:'POST', headers:{ 'Authorization':'Bearer '+token } });
             const opts = await optRes.json();
@@ -124,8 +132,14 @@
         }
       };
 
-      const handleBackupCodes = () => {
-        window.location.href = '../success/index.html?msg=' + encodeURIComponent('Generate backup codes') + '&next=../settings/index.html';
+      const handleBackupCodes = async () => {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/totp/regenerate', { method:'POST', headers:{ 'Authorization':'Bearer '+token } });
+        if(res.ok){
+          const data = await res.json();
+          sessionStorage.setItem('totpCodes', JSON.stringify(data.codes));
+          window.location.href = '../totp/backup.html';
+        }
       };
 
       const handleLogout = async () => {
