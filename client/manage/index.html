@@ -23,6 +23,12 @@
       const [t, setT] = React.useState({});
 
       React.useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) { window.location.href = '../index/index.html'; return; }
+        fetch('/profile', { headers:{ 'Authorization':'Bearer '+token } }).then(r=>{ if(!r.ok) window.location.href='../index/index.html'; });
+      }, []);
+
+      React.useEffect(() => {
         localStorage.setItem('locale', locale);
         fetch(`../../i18n/${locale}.json`)
           .then(res => res.json())

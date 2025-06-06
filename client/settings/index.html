@@ -77,6 +77,26 @@
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ fingerprint: getFingerprint(), days: Number(sessionDays) })
           });
+          if (passkey) {
+            const optRes = await fetch('/passkey/options', { method:'POST', headers:{ 'Authorization':'Bearer '+token } });
+            const opts = await optRes.json();
+            opts.challenge = Uint8Array.from(atob(opts.challenge.replace(/-/g,'+').replace(/_/g,'/')), c=>c.charCodeAt(0));
+            const cred = await navigator.credentials.create({ publicKey: opts });
+            const bufToB64 = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+            await fetch('/passkey/register', {
+              method: 'POST',
+              headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
+              body: JSON.stringify({
+                id: cred.id,
+                rawId: bufToB64(cred.rawId),
+                response: {
+                  attestationObject: bufToB64(cred.response.attestationObject),
+                  clientDataJSON: bufToB64(cred.response.clientDataJSON)
+                },
+                type: cred.type
+              })
+            });
+          }
         } catch (e) { }
         window.location.href = '../success/index.html?msg=' + encodeURIComponent('Saved settings') + '&next=../settings/index.html';
       };
