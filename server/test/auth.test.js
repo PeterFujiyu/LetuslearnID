@@ -80,11 +80,33 @@ describe('POST /change-password', () => {
       .send({ username: 'alice', password: 'newpass' });
     assert.strictEqual(res.status, 200);
   });
+
+  it('enables totp and requires verification', async () => {
+    let r = await request(app)
+      .post('/totp/setup')
+      .set('Authorization', 'Bearer ' + global.token);
+    assert.strictEqual(r.status, 200);
+    const { secret, codes } = r.body;
+    global.secret = secret;
+    const otp = require('otplib').authenticator.generate(secret);
+    r = await request(app)
+      .post('/login')
+      .send({ username: 'alice', password: 'newpass' });
+    assert.strictEqual(r.body.tfa, true);
+    const verify = await request(app)
+      .post('/totp/verify')
+      .send({ token: r.body.temp, code: otp });
+    assert.ok(verify.body.token);
+    global.token = verify.body.token;
+  });
 });
 
 describe('Session persistence', () => {
   it('saves session settings and performs auto login', async () => {
-    const token = (await request(app).post('/login').send({ username: 'alice', password: 'newpass' , rememberDays:2 })).body.token;
+    let r = await request(app).post('/login').send({ username: 'alice', password: 'newpass' , rememberDays:2 });
+    const otp = require('otplib').authenticator.generate(global.secret);
+    const vr = await request(app).post('/totp/verify').send({ token: r.body.temp, code: otp });
+    const token = vr.body.token;
     const fp = 'testfp';
     await request(app)
       .post('/session')
@@ -99,7 +121,10 @@ describe('Session persistence', () => {
 
 describe('POST /logout', () => {
   it('deletes session and rejects old token', async () => {
-    const token = (await request(app).post('/login').send({ username: 'alice', password: 'newpass', rememberDays:2 })).body.token;
+    let r = await request(app).post('/login').send({ username: 'alice', password: 'newpass', rememberDays:2 });
+    const otp = require('otplib').authenticator.generate(global.secret);
+    const vr = await request(app).post('/totp/verify').send({ token: r.body.temp, code: otp });
+    const token = vr.body.token;
     const fp = 'logoutfp';
     await request(app)
       .post('/session')

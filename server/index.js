@@ -10,6 +10,7 @@ const {
   generateAuthenticationOptions,
   verifyAuthenticationResponse
 } = require('@simplewebauthn/server');
+const { authenticator } = require('otplib');
 
 const app = express();
 app.use(express.json());
@@ -33,7 +34,9 @@ const initDb = () => {
     password_hash TEXT,
     credential_id TEXT,
     passkey_public TEXT,
-    counter INTEGER DEFAULT 0
+    counter INTEGER DEFAULT 0,
+    totp_secret TEXT,
+    backup_codes TEXT
   )`;
   const sessionQuery = `CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,9 +44,14 @@ const initDb = () => {
     fingerprint TEXT,
     expires_at INTEGER
   )`;
+  const alters = [
+    'ALTER TABLE users ADD COLUMN totp_secret TEXT',
+    'ALTER TABLE users ADD COLUMN backup_codes TEXT'
+  ];
   return Promise.all([
     promisify(db.run.bind(db))(query),
-    promisify(db.run.bind(db))(sessionQuery)
+    promisify(db.run.bind(db))(sessionQuery),
+    ...alters.map(a => promisify(db.run.bind(db))(a).catch(() => {}))
   ]);
 };
 
@@ -85,6 +93,16 @@ const getUserByCredId = async (credId) => {
 const updateUserPassword = async (id, passwordHash) => {
   const query = 'UPDATE users SET password_hash = ? WHERE id = ?';
   return promisify(db.run.bind(db))(query, passwordHash, id);
+};
+
+const setTotpSecret = async (id, secret, codes) => {
+  const q = 'UPDATE users SET totp_secret=?, backup_codes=? WHERE id=?';
+  return promisify(db.run.bind(db))(q, secret, codes, id);
+};
+
+const updateBackupCodes = async (id, codes) => {
+  const q = 'UPDATE users SET backup_codes=? WHERE id=?';
+  return promisify(db.run.bind(db))(q, codes, id);
 };
 
 // JWT secret; in production use environment variable
@@ -142,6 +160,10 @@ app.post('/login', async (req, res) => {
     if (!match) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+    if (user.totp_secret) {
+      const temp = jwt.sign({ id: user.id, username: user.username, tfa: true, remember: rememberDays, fingerprint }, SECRET, { expiresIn: '5m' });
+      return res.json({ tfa: true, temp });
+    }
     let days = rememberDays;
     if (fingerprint) {
       const sess = await getValidSession(fingerprint);
@@ -161,7 +183,7 @@ app.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await getUserByUsername(req.user.username);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ id: user.id, username: user.username });
+    res.json({ id: user.id, username: user.username, totp: !!user.totp_secret });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -181,6 +203,73 @@ app.post('/change-password', authenticateToken, async (req, res) => {
     const hash = await bcrypt.hash(newPassword, 10);
     await updateUserPassword(user.id, hash);
     res.json({ message: 'Password changed' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+const genCodes = () => {
+  const arr = [];
+  for (let i = 0; i < 12; i++) {
+    arr.push(Math.random().toString(36).slice(-8));
+  }
+  return arr;
+};
+
+app.post('/totp/setup', authenticateToken, async (req, res) => {
+  try {
+    const secret = authenticator.generateSecret();
+    const url = authenticator.keyuri(req.user.username, 'LetuslearnID', secret);
+    const codes = genCodes();
+    await setTotpSecret(req.user.id, secret, JSON.stringify(codes));
+    res.json({ secret, url, codes });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/totp/verify', async (req, res) => {
+  const { token, code } = req.body;
+  if (!token || !code) return res.status(400).json({ error: 'Missing data' });
+  try {
+    const payload = jwt.verify(token, SECRET);
+    if (!payload.tfa) return res.status(400).json({ error: 'Invalid token' });
+    const user = await getUserByUsername(payload.username);
+    if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
+    let valid = authenticator.verify({ token: code, secret: user.totp_secret });
+    let codes = [];
+    if (!valid && user.backup_codes) {
+      codes = JSON.parse(user.backup_codes);
+      const idx = codes.indexOf(code);
+      if (idx > -1) {
+        valid = true;
+        codes.splice(idx, 1);
+        await updateBackupCodes(user.id, JSON.stringify(codes));
+      }
+    }
+    if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    let days = payload.remember;
+    if (payload.fingerprint) {
+      const sess = await getValidSession(payload.fingerprint);
+      if (sess && sess.user_id === user.id) {
+        days = Math.max(1, Math.round((sess.expires_at - Date.now()) / 86400000));
+      }
+    }
+    const final = generateToken(user, days);
+    res.json({ token: final });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Invalid token' });
+  }
+});
+
+app.post('/totp/regenerate', authenticateToken, async (req, res) => {
+  try {
+    const codes = genCodes();
+    await updateBackupCodes(req.user.id, JSON.stringify(codes));
+    res.json({ codes });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
