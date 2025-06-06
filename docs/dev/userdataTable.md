@@ -10,7 +10,9 @@ The following table describes a simple relational schema for storing user accoun
 | `email`             | VARCHAR       | User email address                               |
 | `two_factor_enabled`| BOOLEAN       | Whether two‑factor authentication is enabled     |
 | `two_factor_secret` | VARCHAR       | Secret or seed used for TOTP / authenticator app |
-| `passkey_public`    | TEXT          | Public credential data for passkeys (WebAuthn)   |
+| `credential_id`     | TEXT          | Credential ID of registered passkey |
+| `passkey_public`    | TEXT          | Public key data for passkeys (WebAuthn) |
+| `counter`           | INTEGER       | WebAuthn signature counter |
 | `backup_codes`      | TEXT          | Comma separated one‑time backup codes            |
 | `created_at`        | DATETIME      | Record creation time                             |
 | `updated_at`        | DATETIME      | Last update time                                 |
