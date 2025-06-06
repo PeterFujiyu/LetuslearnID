@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TOTP Manage</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;animation:fadeIn .3s ease;}
+    .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-align:center;width:360px;}
+    .button{width:100%;padding:10px;background:#000;color:#fff;border:none;border-radius:20px;cursor:pointer;margin-top:10px;}
+    .secondary{background:#666;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../utils/fingerprint.js"></script>
+<script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+<script>
+function Manage(){
+  const [enabled,setEnabled]=React.useState(false);
+  React.useEffect(()=>{
+    const token=localStorage.getItem('token');
+    fetch('/profile',{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.json()).then(d=>setEnabled(!!d.totp)).catch(()=>{});
+  },[]);
+  const startSetup=async()=>{
+    const token=localStorage.getItem('token');
+    const r=await fetch('/totp/setup',{method:'POST',headers:{'Authorization':'Bearer '+token}});
+    const data=await r.json();
+    sessionStorage.setItem('totpSetup',JSON.stringify(data));
+    sessionStorage.setItem('totpAction','verify');
+    window.location.href='setup.html';
+  };
+  const update=()=>{sessionStorage.setItem('totpAction','update');window.location.href='confirm.html';};
+  const disable=()=>{sessionStorage.setItem('totpAction','disable');window.location.href='confirm.html';};
+  return React.createElement('div',{className:'box'},[
+    enabled?[
+      React.createElement('button',{key:0,className:'button',onClick:update},'更新'),
+      React.createElement('button',{key:1,className:'button secondary',onClick:disable},'关闭')
+    ]:
+      React.createElement('button',{key:2,className:'button',onClick:startSetup},'开启'),
+    React.createElement('button',{key:3,className:'button',onClick:()=>window.location.href='../settings/index.html'},'返回')
+  ]);
+}
+ReactDOM.render(React.createElement(Manage),document.getElementById('root'));
+</script>
+</body>
+</html>

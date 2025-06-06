@@ -31,5 +31,6 @@
   "manage_page": "管理",
   "bookmarks": "书签",
   "no_account": "还没有账号？立即注册！",
-  "edit": "修改"
+  "edit": "修改",
+  "manage_totp": "管理两步验证"
 }

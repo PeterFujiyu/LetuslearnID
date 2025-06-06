@@ -42,8 +42,7 @@
       const [showConfirm, setShowConfirm] = React.useState(false);
       const [sessionDays, setSessionDays] = React.useState(2);
       const [twoFactor, setTwoFactor] = React.useState(false);
-      const [origTwoFactor, setOrigTwoFactor] = React.useState(false);
-      const [passkey, setPasskey] = React.useState(false);
+      const [passkeyEnabled, setPasskeyEnabled] = React.useState(false);
       const [username, setUsername] = React.useState('');
       const [menuOpen, setMenuOpen] = React.useState(false);
       const bookmarks = React.useMemo(() => {
@@ -57,7 +56,7 @@
         if (token) {
           fetch('/profile', { headers: { 'Authorization': 'Bearer ' + token } })
             .then(res => res.json())
-            .then(data => { setUsername(data.username || ''); setTwoFactor(!!data.totp); setOrigTwoFactor(!!data.totp); })
+            .then(data => { setUsername(data.username || ''); setTwoFactor(!!data.totp); })
             .catch(() => {});
         }
       }, []);
@@ -78,33 +77,7 @@
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
             body: JSON.stringify({ fingerprint: getFingerprint(), days: Number(sessionDays) })
           });
-          if (twoFactor && !origTwoFactor) {
-            const res = await fetch('/totp/setup', { method:'POST', headers:{ 'Authorization':'Bearer '+token } });
-            const data = await res.json();
-            sessionStorage.setItem('totpSetup', JSON.stringify(data));
-            window.location.href = '../totp/setup.html';
-            return;
-          }
-          if (passkey) {
-            const optRes = await fetch('/passkey/options', { method:'POST', headers:{ 'Authorization':'Bearer '+token } });
-            const opts = await optRes.json();
-            opts.challenge = Uint8Array.from(atob(opts.challenge.replace(/-/g,'+').replace(/_/g,'/')), c=>c.charCodeAt(0));
-            const cred = await navigator.credentials.create({ publicKey: opts });
-            const bufToB64 = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-            await fetch('/passkey/register', {
-              method: 'POST',
-              headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
-              body: JSON.stringify({
-                id: cred.id,
-                rawId: bufToB64(cred.rawId),
-                response: {
-                  attestationObject: bufToB64(cred.response.attestationObject),
-                  clientDataJSON: bufToB64(cred.response.clientDataJSON)
-                },
-                type: cred.type
-              })
-            });
-          }
+          
         } catch (e) { }
         window.location.href = '../success/index.html?msg=' + encodeURIComponent('Saved settings') + '&next=../settings/index.html';
       };
@@ -132,14 +105,9 @@
         }
       };
 
-      const handleBackupCodes = async () => {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/totp/regenerate', { method:'POST', headers:{ 'Authorization':'Bearer '+token } });
-        if(res.ok){
-          const data = await res.json();
-          sessionStorage.setItem('totpCodes', JSON.stringify(data.codes));
-          window.location.href = '../totp/backup.html';
-        }
+      const handleBackupCodes = () => {
+        sessionStorage.setItem('totpAction','regenerate');
+        window.location.href = '../totp/confirm.html';
       };
 
       const handleLogout = async () => {
@@ -188,12 +156,8 @@
             React.createElement('i', { className:'fa-solid ' + (showConfirm?'fa-eye-slash':'fa-eye'), onClick:()=>setShowConfirm(!showConfirm), style:{position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', cursor:'pointer'} })
           ),
           React.createElement('button', { className:'button', onClick:handleChangePassword }, t.change_password),
-          React.createElement('label', null,
-            React.createElement('input', { type:'checkbox', checked:twoFactor, onChange:e=>setTwoFactor(e.target.checked) }), ' ', t.twofactor
-          ),
-          React.createElement('label', null,
-            React.createElement('input', { type:'checkbox', checked:passkey, onChange:e=>setPasskey(e.target.checked) }), ' ', t.passkeys
-          ),
+          React.createElement('button', { className:'button', onClick:()=>window.location.href='../totp/manage.html' }, t.manage_totp),
+          React.createElement('button', { className:'button', onClick:()=>window.location.href='../passkey/manage.html' }, t.passkeys),
           React.createElement('input', { type:'number', min:2, max:13, value:sessionDays, onChange:e=>setSessionDays(e.target.value), placeholder:t.remember_days }),
           React.createElement('button', { className:'button secondary', onClick:handleBackupCodes },
             React.createElement('i', { className:'fa-solid fa-shield-halved icon-white' }), t.backup_codes

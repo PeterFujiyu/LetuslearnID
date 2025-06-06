@@ -31,5 +31,6 @@
   "manage_page": "Manage",
   "bookmarks": "Bookmarks",
   "no_account": "Don't have account? Sign up!",
-  "edit": "Edit"
+  "edit": "Edit",
+  "manage_totp": "Manage Two-Factor"
 }
