@@ -12,6 +12,7 @@
     .button { width:100%; padding:10px; background:#000; color:#fff; border:none; border-radius:20px; cursor:pointer; margin-top:10px; }
     .button:hover { background:#333; }
     select { margin-bottom:10px; }
+    .tip { text-align:center; margin-top:10px; color:#666; font-size:0.9em; }
     @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
   </style>
 </head>
@@ -62,7 +63,9 @@
           React.createElement('input', { type:'text', placeholder:t.username, value:username, onChange:e=>setUsername(e.target.value) }),
           React.createElement('input', { type:'password', placeholder:t.password, value:password, onChange:e=>setPassword(e.target.value) }),
           React.createElement('button', { className:'button', onClick:handleRegister }, t.register),
-          React.createElement('button', { className:'button', onClick:() => window.location.href='../index/index.html' }, t.sign_in_link)
+          React.createElement('p', { className:'tip' },
+            React.createElement('a', { href:'../index/index.html' }, t.have_account)
+          )
         )
       );
     }
