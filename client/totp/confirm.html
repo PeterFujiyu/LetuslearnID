@@ -43,9 +43,18 @@ function Confirm(){
       window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
     }
   };
+  const cancel=()=>{
+    if(action==='verify'){
+      fetch('/totp/cancel',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
+        .finally(()=>{window.location.href='../settings/index.html';});
+    }else{
+      window.location.href='../settings/index.html';
+    }
+  };
   return React.createElement('div',{className:'box'},[
     React.createElement('input',{key:0,placeholder:'TOTP',value:code,onChange:e=>setCode(e.target.value)}),
-    React.createElement('button',{key:1,className:'button',onClick:submit},'提交')
+    React.createElement('button',{key:1,className:'button',onClick:submit},'提交'),
+    React.createElement('button',{key:2,className:'button',onClick:cancel},'取消')
   ]);
 }
 ReactDOM.render(React.createElement(Confirm),document.getElementById('root'));
