@@ -68,7 +68,21 @@ npm run e2e
 服务器会删除该指纹的会话并将 token 标记为失效，成功时返回：
 
 ```json
+
 { "message": "logged out" }
+```
+
+### `GET /profile`
+
+返回当前登录用户的基础信息，包含通行密钥状态：
+
+```json
+{
+  "id": 1,
+  "username": "alice",
+  "totp": false,
+  "credential_id": null
+}
 ```
 
 ### `POST /passkey/register`
