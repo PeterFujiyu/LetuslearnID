@@ -82,3 +82,18 @@ describe('POST /change-password', () => {
   });
 });
 
+describe('Session persistence', () => {
+  it('saves session settings and performs auto login', async () => {
+    const token = (await request(app).post('/login').send({ username: 'alice', password: 'newpass' , rememberDays:2 })).body.token;
+    const fp = 'testfp';
+    await request(app)
+      .post('/session')
+      .set('Authorization', 'Bearer ' + token)
+      .send({ fingerprint: fp, days: 2 })
+      .expect(200);
+    const res = await request(app).get('/auto-login').query({ fp });
+    assert.strictEqual(res.status, 200);
+    assert.ok(res.body.token);
+  });
+});
+

@@ -29,6 +29,7 @@
   "back": "Back",
   "account_menu": "Account",
   "manage_page": "Manage",
-  "bookmarks": "Bookmarks"
-  ,"no_account": "Don't have account? Sign up!"
+  "bookmarks": "Bookmarks",
+  "no_account": "Don't have account? Sign up!",
+  "edit": "Edit"
 }

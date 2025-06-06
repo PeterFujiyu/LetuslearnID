@@ -18,6 +18,7 @@
 </head>
 <body>
   <div id="root"></div>
+  <script src="../utils/fingerprint.js"></script>
   <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
   <script>
@@ -26,7 +27,15 @@
       const [password, setPassword] = React.useState('');
       const [locale, setLocale] = React.useState(localStorage.getItem('locale') || 'en_us');
       const [t, setT] = React.useState({});
-      const [days, setDays] = React.useState(2);
+      const [autoChecked, setAutoChecked] = React.useState(false);
+      const [showPw, setShowPw] = React.useState(false);
+
+      React.useEffect(() => {
+        fetch('/auto-login?fp=' + encodeURIComponent(getFingerprint()))
+          .then(res => res.ok ? res.json() : null)
+          .then(data => { if (data && data.token) { localStorage.setItem('token', data.token); window.location.href = '../manage/index.html'; } })
+          .catch(() => {});
+      }, []);
 
       React.useEffect(() => {
         localStorage.setItem('locale', locale);
@@ -41,7 +50,7 @@
             const res = await fetch("/login", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username, password, rememberDays: Number(days) })
+              body: JSON.stringify({ username, password, fingerprint: getFingerprint() })
             });
             const data = await res.json();
             if (res.ok) {
@@ -62,8 +71,10 @@
           ),
           React.createElement('h1', null, t.welcome_back || t.title),
           React.createElement('input', { type:'text', placeholder:t.username, value:username, onChange:e=>setUsername(e.target.value) }),
-          React.createElement('input', { type:'password', placeholder:t.password, value:password, onChange:e=>setPassword(e.target.value) }),
-          React.createElement('input', { type:'number', min:2, max:13, value:days, onChange:e=>setDays(e.target.value) , placeholder:t.remember_days }),
+          React.createElement('div', { style:{position:'relative'} },
+            React.createElement('input', { type: showPw ? 'text':'password', placeholder:t.password, value:password, onChange:e=>setPassword(e.target.value), onCopy:e=>e.preventDefault() }),
+            React.createElement('i', { className:'fa-solid ' + (showPw ? 'fa-eye-slash' : 'fa-eye'), onClick:()=>setShowPw(!showPw), style:{position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', cursor:'pointer'} })
+          ),
           React.createElement('button', { className:'button', onClick:handleLogin }, t.login),
           React.createElement('button', { className:'button', onClick:() => window.location.href = '../register/index.html' }, t.sign_up_link),
           React.createElement('p', { className:'tip' }, t.no_account)
