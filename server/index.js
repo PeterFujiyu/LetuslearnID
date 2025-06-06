@@ -392,6 +392,10 @@ app.post('/passkey/options', authenticateToken, async (req, res) => {
 });
 
 app.post('/passkey/register', authenticateToken, async (req, res) => {
+  const { id, rawId, response, type } = req.body;
+  if (!id || !rawId || !response || !type) {
+    return res.status(400).json({ error: 'Missing credential data' });
+  }
   try {
     const expectedChallenge = challenges[req.user.username];
     if (!expectedChallenge) return res.status(400).json({ error: 'No challenge' });
@@ -402,11 +406,16 @@ app.post('/passkey/register', authenticateToken, async (req, res) => {
       expectedRPID: req.headers.host.split(':')[0]
     });
     const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
-    await createPasskey(req.user.id, credentialID.toString('base64url'), credentialPublicKey.toString('base64'), counter);
+    await createPasskey(
+      req.user.id,
+      credentialID.toString('base64url'),
+      credentialPublicKey.toString('base64'),
+      counter
+    );
     delete challenges[req.user.username];
     res.json({ message: 'registered' });
   } catch (err) {
-    console.error(err);
+    console.error('Passkey registration failed:', err.message);
     res.status(400).json({ error: 'Verification failed' });
   }
 });
@@ -436,8 +445,12 @@ app.post('/passkey/auth', async (req, res) => {
   if (!fingerprint) return res.status(400).json({ error: 'Missing fingerprint' });
   const data = challenges[fingerprint];
   if (!data) return res.status(400).json({ error: 'No challenge' });
+  const { rawId, response } = req.body;
+  if (!rawId || !response) {
+    return res.status(400).json({ error: 'Missing credential data' });
+  }
   try {
-    const user = await getUserByCredId(Buffer.from(req.body.rawId, 'base64').toString('base64url'));
+    const user = await getUserByCredId(Buffer.from(rawId, 'base64').toString('base64url'));
     if (!user) return res.status(404).json({ error: 'Unknown credential' });
     const verification = await verifyAuthenticationResponse({
       response: req.body,
@@ -456,7 +469,7 @@ app.post('/passkey/auth', async (req, res) => {
     delete challenges[fingerprint];
     res.json({ token });
   } catch (err) {
-    console.error(err);
+    console.error('Passkey authentication failed:', err.message);
     res.status(400).json({ error: 'Verification failed' });
   }
 });

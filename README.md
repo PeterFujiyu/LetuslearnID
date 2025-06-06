@@ -71,6 +71,17 @@ npm run e2e
 { "message": "logged out" }
 ```
 
+### `POST /passkey/register`
+
+验证并绑定用户的通行密钥。请求体需包含 WebAuthn 返回的 `id`、`rawId`、`response` 及 `type` 字段。
+若字段缺失或验证失败，服务器将返回：
+
+```json
+{ "error": "Verification failed" }
+```
+
+当字段缺失时会返回 400 状态码并记录错误信息，而不再输出完整的堆栈日志。
+
 ## 未来工作
 
 为了更好的拥有扩展性，项目将来计划将数据库移植自 SQLite 到 PostgreSQL，该任务由于资源限制已经创建为技术债。
