@@ -256,6 +256,7 @@ module.exports = function setupUserRoutes(app, db) {
 
   app.post('/totp/regenerate', authenticateToken, async (req, res) => {
     const { code } = req.body || {};
+    const preview = req.query.preview === '1';
     if (!code && !req.user.passkey) return res.status(400).json({ error: 'Missing code' });
     try {
       const user = await getUserByUsername(req.user.username);
@@ -265,7 +266,9 @@ module.exports = function setupUserRoutes(app, db) {
         if (!valid) return res.status(401).json({ error: 'Invalid code' });
       }
       const codes = genCodes();
-      await updateBackupCodes(req.user.id, JSON.stringify(codes));
+      if (!preview) {
+        await updateBackupCodes(req.user.id, JSON.stringify(codes));
+      }
       res.json({ codes });
     } catch (err) {
       console.error(err);

@@ -34,8 +34,19 @@ function Confirm(){
     let url='/totp/check';
     if(action==='disable') url='/totp/disable';
     if(action==='update') url='/totp/update';
-    if(action==='regenerate') url='/totp/regenerate';
     const body=usePk?{}:{code};
+    if(action==='regenerate'){
+      const res=await fetch('/totp/regenerate?preview=1',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+      const data=await res.json();
+      if(res.ok){
+        sessionStorage.setItem('totpCodes',JSON.stringify(data.codes));
+        if(!usePk) sessionStorage.setItem('totpCode',code); else sessionStorage.setItem('usePasskey','1');
+        window.location.href='backup.html';
+      }else{
+        window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
+      }
+      return;
+    }
     const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
     const data=await res.json();
     if(res.ok){
@@ -43,9 +54,6 @@ function Confirm(){
         sessionStorage.setItem('totpSetup',JSON.stringify(data));
         sessionStorage.setItem('totpAction','verify');
         window.location.href='setup.html';
-      }else if(action==='regenerate'){
-        sessionStorage.setItem('totpCodes',JSON.stringify(data.codes));
-        window.location.href='backup.html';
       }else{
         window.location.href='../success/index.html?msg=Success&next=../settings/index.html';
       }
@@ -81,7 +89,7 @@ function Confirm(){
   };
   return React.createElement('div',{className:'box'},[
     React.createElement('input',{key:0,placeholder:'TOTP',value:code,onChange:e=>setCode(e.target.value)}),
-    hasPasskey && React.createElement('div',{key:1,className:'gray',onClick:verifyPasskey},'Use passkey?'),
+    hasPasskey && action!=='verify' && React.createElement('div',{key:1,className:'gray',onClick:verifyPasskey},'Use passkey?'),
     React.createElement('button',{key:2,className:'button',onClick:()=>submit(false)},'提交'),
     React.createElement('button',{key:3,className:'button',onClick:cancel},'取消')
   ]);
