@@ -460,15 +460,33 @@ app.post('/passkey/auth-options', async (req, res) => {
   const { fingerprint } = req.body;
   if (!fingerprint) return res.status(400).json({ error: 'Missing fingerprint' });
   try {
-    const sess = await getValidSession(fingerprint);
-    if (!sess) return res.status(404).json({ error: 'Not found' });
-    const keys = await getPasskeysByUser(sess.user_id);
+    let sess = await getValidSession(fingerprint);
+    let uid, remember;
+    if (!sess) {
+      const auth = req.headers['authorization'];
+      if (!auth) return res.status(404).json({ error: 'Not found' });
+      try {
+        const token = auth.split(' ')[1];
+        const info = jwt.verify(token, SECRET);
+        const user = await getUserByUsername(info.username);
+        if (!user || (info.fingerprint && info.fingerprint !== fingerprint)) {
+          return res.status(404).json({ error: 'Not found' });
+        }
+        uid = user.id;
+        remember = info.remember;
+      } catch (e) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+    } else {
+      uid = sess.user_id;
+    }
+    const keys = await getPasskeysByUser(uid);
     if (!keys.length) return res.status(404).json({ error: 'No passkey' });
-    const options = generateAuthenticationOptions({
+    const options = await generateAuthenticationOptions({
       rpID: req.headers.host.split(':')[0],
-      allowCredentials: keys.map(k => ({ id: Buffer.from(k.credential_id, 'base64url'), type: 'public-key' }))
+      allowCredentials: keys.map(k => ({ id: k.credential_id, type: 'public-key' }))
     });
-    challenges[fingerprint] = { challenge: options.challenge, sess };
+    challenges[fingerprint] = sess ? { challenge: options.challenge, sess } : { challenge: options.challenge, uid, remember };
     res.json(options);
   } catch (err) {
     console.error(err);
@@ -486,9 +504,11 @@ app.post('/passkey/auth', async (req, res) => {
     return res.status(400).json({ error: 'Missing credential data' });
   }
   try {
-    const key = await getPasskeyByCredId(Buffer.from(rawId, 'base64').toString('base64url'));
-    if (!key) return res.status(404).json({ error: 'Unknown credential' });
-    const user = await promisify(db.get.bind(db))('SELECT * FROM users WHERE id = ?', key.user_id);
+    const credId = Buffer.from(rawId, 'base64').toString('base64url');
+    const key = await getPasskeyByCredId(credId);
+    const uid = data.sess ? data.sess.user_id : data.uid;
+    if (!key || key.user_id !== uid) return res.status(404).json({ error: 'Unknown credential' });
+    const user = await promisify(db.get.bind(db))('SELECT * FROM users WHERE id = ?', uid);
     const verification = await verifyAuthenticationResponse({
       response: req.body,
       expectedChallenge: data.challenge,
@@ -502,8 +522,8 @@ app.post('/passkey/auth', async (req, res) => {
       }
     });
     await updatePasskeyCounter(key.credential_id, verification.authenticationInfo.newCounter);
-    const daysLeft = Math.max(1, Math.round((data.sess.expires_at - Date.now()) / 86400000));
-    const token = generateToken(user, daysLeft);
+    const days = data.sess ? Math.max(1, Math.round((data.sess.expires_at - Date.now()) / 86400000)) : (data.remember || 1);
+    const token = generateToken(user, days);
     delete challenges[fingerprint];
     res.json({ token });
   } catch (err) {

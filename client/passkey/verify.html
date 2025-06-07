@@ -19,7 +19,10 @@ function VerifyPasskey(){
   React.useEffect(()=>{
     (async()=>{
       const fp=getFingerprint();
-      const optRes=await fetch('/passkey/auth-options',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fingerprint:fp})});
+      const t=sessionStorage.getItem('tfa')||localStorage.getItem('token');
+      const h={'Content-Type':'application/json'};
+      if(t)h['Authorization']='Bearer '+t;
+      const optRes=await fetch('/passkey/auth-options',{method:'POST',headers:h,body:JSON.stringify({fingerprint:fp})});
       if(!optRes.ok){
         window.location.href='../failure/index.html?msg=No%20passkey';
         return;
