@@ -15,6 +15,8 @@ LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](ht
 
 首个注册用户将自动加入 `admin` 用户组。管理员可在 `/manage` 页面进入后台并访问 `/admin/` 界面。该页面提供完整的用户和用户组管理功能，并新增“SQL CLI”窗口，可直接执行 SQL 语句并支持 `.tables` 查看表列表。管理员可修改任意用户的密码、两步验证状态、通行密钥绑定以及所属组，并支持在线新增或编辑用户组配置。页面还能查看指定用户的验证码，如不存在会自动生成。具体的组与权限字段说明见 [docs/dev/GroupPermissions.md](docs/dev/GroupPermissions.md)。
 
+后台页面现已支持语言切换，编辑用户信息时新增“保存更改”和“取消”按钮，可放弃未提交的修改。
+
 登出时页面会调用 `/logout`，携带当前指纹并在请求头中附加 token。服务器删除该指纹的会话记录并使 token 失效，浏览器随后需执行 `localStorage.removeItem('token')` 并返回登录页。
 
 ## SMTP 配置
