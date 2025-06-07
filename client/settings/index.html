@@ -95,19 +95,8 @@
             window.location.href = '../failure/index.html?msg=' + encodeURIComponent(d.error || 'Failed');
             return;
           }
-          const code = prompt(t.email_code);
-          if (!code) return;
-          const vr = await fetch('/change-email/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify({ id: d.id, code })
-          });
-          const vd = await vr.json();
-          if (vr.ok) {
-            window.location.href = '../success/index.html?msg=' + encodeURIComponent(t.success) + '&next=../settings/index.html';
-          } else {
-            window.location.href = '../failure/index.html?msg=' + encodeURIComponent(vd.error || 'Failed');
-          }
+          sessionStorage.setItem('email_change_id', d.id);
+          window.location.href = '../email/verify.html';
         } catch (e) {
           window.location.href = '../failure/index.html?msg=Email';
         }
