@@ -55,6 +55,17 @@ const initDb = () => {
     fingerprint TEXT,
     expires_at INTEGER
   )`;
+  const groupQuery = `CREATE TABLE IF NOT EXISTS groups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE,
+    parent_id INTEGER,
+    permissions TEXT
+  )`;
+  const ugQuery = `CREATE TABLE IF NOT EXISTS user_groups (
+    user_id INTEGER,
+    group_id INTEGER,
+    PRIMARY KEY (user_id, group_id)
+  )`;
   const alters = [
     'ALTER TABLE users ADD COLUMN email TEXT',
     'ALTER TABLE users ADD COLUMN totp_secret TEXT',
@@ -64,13 +75,32 @@ const initDb = () => {
     promisify(db.run.bind(db))(query),
     promisify(db.run.bind(db))(passkeyQuery),
     promisify(db.run.bind(db))(sessionQuery),
+    promisify(db.run.bind(db))(groupQuery),
+    promisify(db.run.bind(db))(ugQuery),
     promisify(db.run.bind(db))(pendingQuery),
     promisify(db.run.bind(db))(verifyQuery),
     ...alters.map(a => promisify(db.run.bind(db))(a).catch(() => {}))
-  ]);
+  ]).then(async () => {
+    await promisify(db.run.bind(db))("INSERT OR IGNORE INTO groups (id,name) VALUES (1,'admin')");
+    await promisify(db.run.bind(db))("INSERT OR IGNORE INTO groups (id,name) VALUES (2,'user')");
+  });
 };
 
-require('./users')(app, db);
+const userMod = require('./users')(app, db);
+require('./admin')(app, db, userMod.authenticateToken);
+
+app.use('/admin', async (req,res,next)=>{
+  let token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  if(!token && req.query.t) token = req.query.t;
+  try{
+    const user = await userMod.verifyToken(token);
+    const row = await promisify(db.get.bind(db))("SELECT 1 FROM user_groups ug JOIN groups g ON ug.group_id=g.id WHERE ug.user_id=? AND g.name='admin'", user.id);
+    if(!row) return res.status(403).send('Forbidden');
+    express.static(path.join(clientDir,'admin'))(req,res,next);
+  }catch(err){
+    res.status(401).send('Unauthorized');
+  }
+});
 
 initDb().then(() => {
   if (require.main === module) {

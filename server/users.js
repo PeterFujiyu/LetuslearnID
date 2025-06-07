@@ -10,10 +10,22 @@ const {
 const { authenticator } = require('otplib');
 const { sendCode } = require('./email');
 
-module.exports = function setupUserRoutes(app, db) {
+function setupUserRoutes(app, db) {
   const challenges = {};
   const SECRET = process.env.JWT_SECRET || 'dev-secret';
   const revokedTokens = new Set();
+
+  const verifyToken = (token) => new Promise((res, rej) => {
+    if (!token || revokedTokens.has(token)) return rej(new Error('Invalid'));
+    jwt.verify(token, SECRET, (err, user) => {
+      if (err) return rej(err);
+      res(user);
+    });
+  });
+
+  const runStmt = (q, params=[]) => new Promise((res, rej) => {
+    db.run(q, params, function(err){ if(err) rej(err); else res(this); });
+  });
 
   const getUserByUsername = async (username) => {
     const query = 'SELECT * FROM users WHERE username = ?';
@@ -22,7 +34,11 @@ module.exports = function setupUserRoutes(app, db) {
 
   const createUser = async (username, email, passwordHash) => {
     const query = 'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)';
-    return promisify(db.run.bind(db))(query, username, email, passwordHash);
+    const stmt = await runStmt(query, [username, email, passwordHash]);
+    const count = await promisify(db.get.bind(db))('SELECT COUNT(*) as c FROM users');
+    const groupId = count.c === 1 ? 1 : 2; // first user becomes admin
+    await runStmt('INSERT INTO user_groups (user_id, group_id) VALUES (?, ?)', [stmt.lastID, groupId]);
+    return stmt;
   };
 
   const createSession = async (userId, fingerprint, expiresAt) => {
@@ -84,10 +100,6 @@ module.exports = function setupUserRoutes(app, db) {
     return promisify(db.run.bind(db))(q, codes, id);
   };
 
-  const runStmt = (q, params=[]) => new Promise((res, rej) => {
-    db.run(q, params, function(err){ if(err) rej(err); else res(this); });
-  });
-
   const addPending = async (username, email, hash, code, action) => {
     const q = 'INSERT INTO pending_codes (username,email,password_hash,code,action,created_at) VALUES (?,?,?,?,?,?)';
     const stmt = await runStmt(q, [username, email, hash, code, action, Date.now()]);
@@ -136,12 +148,7 @@ module.exports = function setupUserRoutes(app, db) {
     const auth = req.headers['authorization'];
     const token = auth && auth.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Missing token' });
-    if (revokedTokens.has(token)) return res.status(403).json({ error: 'Invalid token' });
-    jwt.verify(token, SECRET, (err, user) => {
-      if (err) return res.status(403).json({ error: 'Invalid token' });
-      req.user = user;
-      next();
-    });
+    verifyToken(token).then(user => { req.user = user; next(); }).catch(() => res.status(403).json({ error: 'Invalid token' }));
   };
 
   const genCodes = () => {
@@ -247,10 +254,15 @@ module.exports = function setupUserRoutes(app, db) {
       const user = await getUserByUsername(req.user.username);
       if (!user) return res.status(404).json({ error: 'User not found' });
       const keys = await getPasskeysByUser(user.id);
+      const groups = await promisify(db.all.bind(db))(
+        'SELECT g.name FROM user_groups ug JOIN groups g ON ug.group_id=g.id WHERE ug.user_id=?',
+        user.id
+      );
       res.json({
         id: user.id,
         username: user.username,
         totp: !!user.totp_secret,
+        groups: groups.map(g=>g.name),
         passkeys: keys.map(k => k.credential_id)
       });
     } catch (err) {
@@ -711,4 +723,7 @@ module.exports = function setupUserRoutes(app, db) {
       res.status(500).json({ error: 'Server error' });
     }
   });
-};
+  return { authenticateToken, verifyToken };
+}
+
+module.exports = setupUserRoutes;
