@@ -5,6 +5,7 @@ node_modules/
 # Ignore Node.js generated directories
 server/node_modules/
 server/users.db
+server/emailconfig.json
 
 # Ignore environment files
 .env
