@@ -38,7 +38,8 @@ LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](ht
 配置完成后，可运行下列命令验证 SMTP 是否可用：
 
 ```bash
-npm run testemailsmtp "测试用验证码xxxx" "目标email"
+cd server
+TEST_CODE=123654 TEST_EMAIL=user@example.com npx mocha testemailsmtp.js
 ```
 
 若邮件成功送达则表示配置正确。
