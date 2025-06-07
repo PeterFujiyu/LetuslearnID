@@ -179,7 +179,8 @@
           React.createElement('button', { className:'button', onClick:handleChangePassword }, t.change_password),
           React.createElement('button', { className:'button', onClick:()=>window.location.href='/totp/manage.html' }, t.manage_totp),
           React.createElement('button', { className:'button', onClick:()=>window.location.href='/passkey/manage.html' }, t.passkeys),
-          React.createElement('input', { type:'number', min:2, max:13, value:sessionDays, onChange:e=>setSessionDays(e.target.value), placeholder:t.remember_days }),
+          React.createElement('label', { htmlFor: 'sessionDays' }, t.remember_days),
+          React.createElement('input', { id:'sessionDays', type:'number', min:2, max:13, value:sessionDays, onChange:e=>setSessionDays(e.target.value), placeholder:t.remember_days }),
           React.createElement('button', { className:'button secondary', onClick:handleBackupCodes },
             React.createElement('i', { className:'fa-solid fa-shield-halved icon-white' }), t.backup_codes
           ),

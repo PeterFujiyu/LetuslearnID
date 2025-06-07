@@ -6,8 +6,6 @@ node_modules/
 server/node_modules/
 server/users.db
 
-# Ignore email config
-server/emailconfig.json
-
 # Ignore environment files
 .env
+server/emailconfig.json
