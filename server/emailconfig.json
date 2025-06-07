@@ -1,14 +1,11 @@
 {
   "smtp": {
-    "host": "smtp.gmail.com",
+    "host": "smtp.example.com",
     "port": 465,
     "secure": true,
-    "auth": {
-      "user": "xiaoqiang.fu@gmail.com",
-      "pass": "nvpt wlxg z yzf dflj"
-    }
+    "auth": { "user": "user@example.com", "pass": "password" }
   },
-  "from": "noreply@letuslearn.com",
+  "from": "noreply@example.com",
   "subject": "LetuslearnID verification code",
   "template": "Your verification code is {code}. IP: {ip}. If this wasn't you please ignore this email."
 }
