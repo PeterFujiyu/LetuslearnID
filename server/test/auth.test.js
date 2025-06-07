@@ -166,10 +166,17 @@ describe('TOTP and backup codes', () => {
 
   it('regenerates backup codes with totp code', async () => {
     const otp = require('otplib').authenticator.generate(global.secret);
+    const prev = await request(app)
+      .post('/totp/regenerate?preview=1')
+      .set('Authorization', 'Bearer ' + global.token)
+      .send({ code: otp });
+    assert.strictEqual(prev.status, 200);
+    assert.ok(Array.isArray(prev.body.codes));
+    const otp2 = require('otplib').authenticator.generate(global.secret);
     const res = await request(app)
       .post('/totp/regenerate')
       .set('Authorization', 'Bearer ' + global.token)
-      .send({ code: otp });
+      .send({ code: otp2 });
     assert.strictEqual(res.status, 200);
     assert.ok(Array.isArray(res.body.codes));
     assert.strictEqual(res.body.codes.length, 12);

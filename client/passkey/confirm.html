@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Passkey Confirm</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;animation:fadeIn .3s ease;}
+    .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-align:center;width:360px;}
+    .button{width:100%;padding:10px;background:#000;color:#fff;border:none;border-radius:20px;cursor:pointer;margin-top:10px;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../utils/fingerprint.js"></script>
+<script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+<script>
+function Confirm(){
+  const action=sessionStorage.getItem('pkAction');
+  const b64ToBuf=str=>Uint8Array.from(atob(str.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+  const bufToB64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const enable=async()=>{
+    const token=localStorage.getItem('token');
+    const optRes=await fetch('/passkey/options',{method:'POST',headers:{'Authorization':'Bearer '+token}});
+    const opts=await optRes.json();
+    opts.challenge=b64ToBuf(opts.challenge);
+    opts.user.id=b64ToBuf(opts.user.id);
+    if(opts.excludeCredentials){opts.excludeCredentials=opts.excludeCredentials.map(c=>({...c,id:b64ToBuf(c.id)}));}
+    const cred=await navigator.credentials.create({publicKey:opts});
+    const b=b=>bufToB64(b);
+    await fetch('/passkey/register',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({id:cred.id,rawId:b(cred.rawId),response:{attestationObject:b(cred.response.attestationObject),clientDataJSON:b(cred.response.clientDataJSON)},type:cred.type})});
+    window.location.href='../success/index.html?msg=Success&next=manage.html';
+  };
+  const disable=async()=>{
+    const token=localStorage.getItem('token');
+    await fetch('/passkey/remove',{method:'POST',headers:{'Authorization':'Bearer '+token}});
+    window.location.href='../success/index.html?msg=Success&next=manage.html';
+  };
+  const cancel=()=>{window.location.href='manage.html';};
+  return React.createElement('div',{className:'box'},[
+    React.createElement('p',{key:0},action==='enable'?'确认开启通行密钥?':'确认关闭通行密钥?'),
+    React.createElement('button',{key:1,className:'button',onClick:action==='enable'?enable:disable},'确认'),
+    React.createElement('button',{key:2,className:'button',onClick:cancel},'取消')
+  ]);
+}
+ReactDOM.render(React.createElement(Confirm),document.getElementById('root'));
+</script>
+</body>
+</html>
