@@ -36,5 +36,6 @@
   "no_account": "Don't have account? Sign up!",
   "edit": "Edit",
   "manage_totp": "Manage Two-Factor",
-  "code": "Code"
+  "code": "Code",
+  "reset_via_code": "Reset Password via Code"
 }

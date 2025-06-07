@@ -628,6 +628,58 @@ module.exports = function setupUserRoutes(app, db) {
     }
   });
 
+  app.post('/reset-password', async (req, res) => {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ error: 'Missing username' });
+    try {
+      const user = await getUserByUsername(username);
+      if (!user || !user.email) return res.status(404).json({ error: 'Not found' });
+      const { code } = await getOrCreateCode(user.id, req.ip);
+      const id = await addPending(username, user.email, null, code, 'reset');
+      sendCode(user.email, code, req.ip).catch(() => {});
+      res.json({ id });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.post('/reset-password/check', async (req, res) => {
+    const { id, code } = req.body;
+    if (!id || !code) return res.status(400).json({ error: 'Missing data' });
+    try {
+      const record = await getPending(id);
+      if (!record || record.code !== code || record.action !== 'reset') {
+        return res.status(400).json({ error: 'Invalid code' });
+      }
+      res.json({ message: 'verified' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.post('/reset-password/update', async (req, res) => {
+    const { id, code, password } = req.body;
+    if (!id || !code || !password) return res.status(400).json({ error: 'Missing data' });
+    try {
+      const record = await getPending(id);
+      if (!record || record.code !== code || record.action !== 'reset') {
+        return res.status(400).json({ error: 'Invalid code' });
+      }
+      const user = await getUserByUsername(record.username);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      const hash = await bcrypt.hash(password, 10);
+      await updateUserPassword(user.id, hash);
+      await removePending(id);
+      await promisify(db.run.bind(db))('UPDATE verifycode SET authorized=1 WHERE code=? AND ip=? AND authorized=0', record.code, req.ip);
+      res.json({ message: 'updated' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
   app.post('/logout', authenticateToken, async (req, res) => {
     const { fingerprint } = req.body;
     if (!fingerprint) return res.status(400).json({ error: 'Missing fingerprint' });
