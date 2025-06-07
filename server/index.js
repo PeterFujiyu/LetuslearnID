@@ -515,9 +515,9 @@ app.post('/passkey/auth', async (req, res) => {
       expectedOrigin: `http://${req.headers.host}`,
       expectedRPID: req.headers.host.split(':')[0],
       requireUserVerification: false,
-      authenticator: {
-        credentialID: Buffer.from(key.credential_id, 'base64url'),
-        credentialPublicKey: Buffer.from(key.public_key, 'base64'),
+      credential: {
+        id: key.credential_id,
+        publicKey: Buffer.from(key.public_key, 'base64'),
         counter: key.counter
       }
     });
