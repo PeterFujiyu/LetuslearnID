@@ -8,4 +8,5 @@ server/users.db
 
 # Ignore environment files
 .env
+
 server/emailconfig.json
