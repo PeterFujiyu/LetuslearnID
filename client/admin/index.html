@@ -24,21 +24,98 @@
     function AdminApp(){
       const [users,setUsers]=React.useState([]);
       const [groups,setGroups]=React.useState([]);
+      const [edit,setEdit]=React.useState(null);
+      const [sql,setSql]=React.useState('');
+      const [result,setResult]=React.useState('');
       const token=localStorage.getItem('token');
+
       React.useEffect(()=>{
         if(!token){window.location.href='/index/index.html';return;}
-        fetch('/admin/users',{headers:{'Authorization':'Bearer '+token}}).then(r=>r.ok?r.json():Promise.reject()).then(setUsers).catch(()=>window.location.href='/index/index.html');
-        fetch('/admin/groups',{headers:{'Authorization':'Bearer '+token}}).then(r=>r.ok?r.json():[]).then(setGroups);
+        fetch('/admin/users',{headers:{'Authorization':'Bearer '+token}})
+          .then(r=>r.ok?r.json():Promise.reject())
+          .then(setUsers).catch(()=>window.location.href='/index/index.html');
+        fetch('/admin/groups',{headers:{'Authorization':'Bearer '+token}})
+          .then(r=>r.ok?r.json():[]).then(setGroups);
       },[]);
+
+      const loadUser=id=>{
+        fetch('/admin/users/'+id,{headers:{'Authorization':'Bearer '+token}})
+          .then(r=>r.json()).then(setEdit);
+      };
+      const saveUser=()=>{
+        fetch('/admin/users/'+edit.id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({
+          password:edit.password||undefined,
+          totpEnabled:edit.totp,
+          passkeyEnabled:edit.passkey,
+          groups:edit.groups
+        })}).then(r=>r.ok?alert('saved'):alert('fail'));
+      };
+      const getCode=id=>{
+        fetch('/admin/users/'+id+'/code',{headers:{'Authorization':'Bearer '+token}})
+          .then(r=>r.json()).then(d=>alert('code:'+d.code));
+      };
+      const execSql=()=>{
+        fetch('/admin/sql',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({sql})})
+          .then(r=>r.json()).then(d=>setResult(JSON.stringify(d.rows||d)));
+      };
+      const saveGroup=g=>{
+        const m=g.id?'PUT':'POST';
+        const url='/admin/groups'+(g.id?'/'+g.id:'');
+        fetch(url,{method:m,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(g)})
+          .then(r=>r.ok?null:alert('fail'));
+      };
+
       return React.createElement('div',{className:'container'},[
-        React.createElement('h1',{key:0},'Admin'),
-        React.createElement('h2',{key:1},'Users'),
-        React.createElement('table',{key:2},[
-          React.createElement('thead',{key:0},React.createElement('tr',null,[React.createElement('th',{key:0},'ID'),React.createElement('th',{key:1},'Name')])),
-          React.createElement('tbody',{key:1},users.map(u=>React.createElement('tr',{key:u.id},[React.createElement('td',{key:0},u.id),React.createElement('td',{key:1},u.username)])))
+        React.createElement('h1',{key:'h'},'Admin'),
+        React.createElement('h2',{key:'u'},'Users'),
+        React.createElement('table',{key:'t'},[
+          React.createElement('thead',{key:0},React.createElement('tr',null,[React.createElement('th',{key:0},'ID'),React.createElement('th',{key:1},'Name'),React.createElement('th',{key:2},'Op')])),
+          React.createElement('tbody',{key:1},users.map(u=>React.createElement('tr',{key:u.id},[
+            React.createElement('td',{key:0},u.id),
+            React.createElement('td',{key:1},u.username),
+            React.createElement('td',{key:2},[
+              React.createElement('button',{className:'button',onClick:()=>loadUser(u.id),key:'e'},'Edit'),
+              React.createElement('button',{className:'button',onClick:()=>getCode(u.id),key:'c',style:{marginLeft:'4px'}},'Code')
+            ])
+          ])))
         ]),
-        React.createElement('h2',{key:3},'Groups'),
-        React.createElement('ul',{key:4},groups.map(g=>React.createElement('li',{key:g.id},g.name)))
+        edit&&React.createElement('div',{key:'edit'},[
+          React.createElement('h3',{key:0},'Edit '+edit.username),
+          React.createElement('input',{key:1,placeholder:'new password',type:'password',onChange:e=>setEdit({...edit,password:e.target.value})}),
+          React.createElement('div',{key:2},[
+            React.createElement('label',null,React.createElement('input',{type:'checkbox',checked:edit.totp,onChange:e=>setEdit({...edit,totp:e.target.checked})}), ' TOTP'),
+            React.createElement('label',{style:{marginLeft:'10px'}},React.createElement('input',{type:'checkbox',checked:edit.passkey,onChange:e=>setEdit({...edit,passkey:e.target.checked})}), ' Passkey')
+          ]),
+          React.createElement('div',{key:3},groups.map(g=>React.createElement('label',{key:g.id,style:{marginRight:'6px'}},[
+            React.createElement('input',{type:'checkbox',checked:edit.groups.includes(g.id),onChange:e=>{
+              const gs=e.target.checked?edit.groups.concat(g.id):edit.groups.filter(i=>i!==g.id);
+              setEdit({...edit,groups:gs});
+            }}),g.name
+          ]))),
+          React.createElement('button',{className:'button',onClick:saveUser,key:4},'Save')
+        ]),
+        React.createElement('h2',{key:'g'},'Groups'),
+        React.createElement('table',{key:'gt'},[
+          React.createElement('thead',{key:0},React.createElement('tr',null,[React.createElement('th',{key:0},'Name'),React.createElement('th',{key:1},'Parent'),React.createElement('th',{key:2},'Perm'),React.createElement('th',{key:3},'') ])),
+          React.createElement('tbody',{key:1},[
+            ...groups.map(g=>React.createElement('tr',{key:g.id},[
+              React.createElement('td',{key:0},React.createElement('input',{defaultValue:g.name,onChange:e=>g.name=e.target.value})),
+              React.createElement('td',{key:1},React.createElement('input',{defaultValue:g.parent_id||'',onChange:e=>g.parent_id=e.target.value})),
+              React.createElement('td',{key:2},React.createElement('input',{defaultValue:g.permissions||'',onChange:e=>g.permissions=e.target.value})),
+              React.createElement('td',{key:3},React.createElement('button',{className:'button',onClick:()=>saveGroup(g)},'Save'))
+            ])),
+            React.createElement('tr',{key:'new'},[
+              React.createElement('td',null,React.createElement('input',{placeholder:'name',id:'gn'})),
+              React.createElement('td',null,React.createElement('input',{placeholder:'parent',id:'gp'})),
+              React.createElement('td',null,React.createElement('input',{placeholder:'perm',id:'gperm'})),
+              React.createElement('td',null,React.createElement('button',{className:'button',onClick:()=>saveGroup({name:document.getElementById('gn').value,parent_id:document.getElementById('gp').value||null,permissions:document.getElementById('gperm').value})},'Add'))
+            ])
+          ])
+        ]),
+        React.createElement('h2',{key:'sqlh'},'SQL CLI'),
+        React.createElement('textarea',{key:'sqla',style:{width:'100%',height:'80px'},value:sql,onChange:e=>setSql(e.target.value)}),
+        React.createElement('button',{className:'button',onClick:execSql,key:'ex'},'Execute'),
+        React.createElement('pre',{key:'res'},result)
       ]);
     }
     ReactDOM.render(React.createElement(AdminApp), document.getElementById('root'));
