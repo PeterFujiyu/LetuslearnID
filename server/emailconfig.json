@@ -10,5 +10,5 @@
   },
   "from": "noreply@example.com",
   "subject": "LetuslearnID verification code",
-  "template": "Your verification code is {code}"
+  "template": "Your verification code is {code}. IP: {ip}. If this wasn't you please ignore this email."
 }
