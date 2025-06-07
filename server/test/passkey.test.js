@@ -80,4 +80,20 @@ describe('Passkey endpoints', () => {
       .send({ rawId: 'abc', response: {}, type: 'public-key' });
     assert.strictEqual(res.status, 400);
   });
+
+  it('auth options with token when no session', async () => {
+    const uid = (await get('SELECT id FROM users WHERE username=?', 'pkuser')).id;
+    await run("INSERT INTO passkeys (user_id, credential_id, public_key, counter) VALUES (?, ?, 'pc', 0)", uid, Buffer.from('tok').toString('base64url'));
+    const opt = await request(app)
+      .post('/passkey/auth-options')
+      .set('Authorization', 'Bearer ' + token)
+      .send({ fingerprint: 'fpt' });
+    assert.strictEqual(opt.status, 200);
+    assert.ok(opt.body.challenge);
+    const rid = Buffer.from('tok').toString('base64');
+    const res = await request(app)
+      .post('/passkey/auth?fingerprint=fpt')
+      .send({ rawId: rid, response: {}, type: 'public-key' });
+    assert.strictEqual(res.status, 400);
+  });
 });
