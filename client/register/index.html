@@ -23,6 +23,7 @@
   <script>
     function RegisterName() {
       const [username, setUsername] = React.useState(sessionStorage.getItem('reg_name') || '');
+      const [email, setEmail] = React.useState(sessionStorage.getItem('reg_email') || '');
       const [locale, setLocale] = React.useState(localStorage.getItem('locale') || 'en_us');
       const [t, setT] = React.useState({});
 
@@ -36,6 +37,7 @@
 
       const next = () => {
         sessionStorage.setItem('reg_name', username);
+        sessionStorage.setItem('reg_email', email);
         window.location.href = './password.html';
       };
 
@@ -47,6 +49,7 @@
           ),
           React.createElement('h1', null, t.register),
           React.createElement('input', { type:'text', placeholder:t.username, value:username, onChange:e=>setUsername(e.target.value) }),
+          React.createElement('input', { type:'email', placeholder:t.email || 'Email', value:email, onChange:e=>setEmail(e.target.value) }),
           React.createElement('button', { className:'button', onClick:next }, t.continue),
           React.createElement('p', { className:'tip' },
             React.createElement('a', { href:'../index/index.html' }, t.have_account)

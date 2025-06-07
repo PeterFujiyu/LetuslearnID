@@ -1,6 +1,7 @@
 {
   "title": "Letuslearn.now 登录",
   "username": "用户名",
+  "email": "邮箱",
   "password": "密码",
   "login": "登录",
   "register": "注册",
@@ -10,6 +11,7 @@
   "change_password": "修改密码",
   "new_email": "新邮箱",
   "change_email": "修改邮箱",
+  "email_code": "请输入邮件中的验证码",
   "twofactor": "启用两步验证",
   "passkeys": "管理通行密钥",
   "backup_codes": "生成备用代码",
@@ -33,5 +35,6 @@
   "bookmarks": "书签",
   "no_account": "还没有账号？立即注册！",
   "edit": "修改",
-  "manage_totp": "管理两步验证"
+  "manage_totp": "管理两步验证",
+  "code": "验证码"
 }

@@ -20,6 +20,7 @@ const initDb = () => {
   const query = `CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
+    email TEXT,
     password_hash TEXT,
     totp_secret TEXT,
     backup_codes TEXT
@@ -31,6 +32,15 @@ const initDb = () => {
     public_key TEXT,
     counter INTEGER DEFAULT 0
   )`;
+  const pendingQuery = `CREATE TABLE IF NOT EXISTS pending_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT,
+    email TEXT,
+    password_hash TEXT,
+    code TEXT,
+    action TEXT,
+    created_at INTEGER
+  )`;
   const sessionQuery = `CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -38,6 +48,7 @@ const initDb = () => {
     expires_at INTEGER
   )`;
   const alters = [
+    'ALTER TABLE users ADD COLUMN email TEXT',
     'ALTER TABLE users ADD COLUMN totp_secret TEXT',
     'ALTER TABLE users ADD COLUMN backup_codes TEXT'
   ];
@@ -45,6 +56,7 @@ const initDb = () => {
     promisify(db.run.bind(db))(query),
     promisify(db.run.bind(db))(passkeyQuery),
     promisify(db.run.bind(db))(sessionQuery),
+    promisify(db.run.bind(db))(pendingQuery),
     ...alters.map(a => promisify(db.run.bind(db))(a).catch(() => {}))
   ]);
 };

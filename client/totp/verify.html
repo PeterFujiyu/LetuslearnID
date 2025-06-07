@@ -41,6 +41,7 @@ function Verify(){
     React.createElement('input',{key:0,placeholder:'TOTP',value:code,onChange:e=>setCode(e.target.value)}),
     hasPasskey && React.createElement('div',{key:1,className:'gray',onClick:()=>window.location.href='../passkey/verify.html'},'Use passkey?'),
     React.createElement('div',{key:2,className:'gray',onClick:()=>setUseBackup(!useBackup)},'无法访问？使用备份代码。'),
+    React.createElement('div',{key:5,className:'gray',onClick:()=>window.location.href='../recover/index.html'},'丢失凭据？'),
     React.createElement('button',{key:3,className:'button',onClick:submit},'提交'),
     React.createElement('button',{key:4,className:'button',onClick:cancel},'取消')
   ]);

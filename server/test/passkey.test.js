@@ -16,9 +16,11 @@ describe('Passkey endpoints', () => {
   let token;
 
   before(async () => {
-    await request(app)
+    const reg = await request(app)
       .post('/register')
-      .send({ username: 'pkuser', password: 'secret' });
+      .send({ username: 'pkuser', email:'pk@ex.com', password: 'secret' });
+    const row = await get('SELECT id, code FROM pending_codes WHERE id=?', reg.body.id);
+    await request(app).post('/register/verify').send({ id: reg.body.id, code: row.code });
     const res = await request(app)
       .post('/login')
       .send({ username: 'pkuser', password: 'secret' });

@@ -1,0 +1,14 @@
+{
+  "smtp": {
+    "host": "smtp.example.com",
+    "port": 465,
+    "secure": true,
+    "auth": {
+      "user": "user@example.com",
+      "pass": "password"
+    }
+  },
+  "from": "noreply@example.com",
+  "subject": "LetuslearnID verification code",
+  "template": "Your verification code is {code}"
+}

@@ -1,6 +1,7 @@
 {
   "title": "Letuslearn.now Login",
   "username": "Username",
+  "email": "Email",
   "password": "Password",
   "login": "Login",
   "register": "Register",
@@ -10,6 +11,7 @@
   "change_password": "Change Password",
   "new_email": "New Email",
   "change_email": "Change Email",
+  "email_code": "Enter code from email",
   "twofactor": "Enable Two-Factor Auth",
   "passkeys": "Manage Passkeys",
   "backup_codes": "Generate Backup Codes",
@@ -33,5 +35,6 @@
   "bookmarks": "Bookmarks",
   "no_account": "Don't have account? Sign up!",
   "edit": "Edit",
-  "manage_totp": "Manage Two-Factor"
+  "manage_totp": "Manage Two-Factor",
+  "code": "Code"
 }

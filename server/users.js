@@ -8,6 +8,7 @@ const {
   verifyAuthenticationResponse
 } = require('@simplewebauthn/server');
 const { authenticator } = require('otplib');
+const { sendCode } = require('./email');
 
 module.exports = function setupUserRoutes(app, db) {
   const challenges = {};
@@ -19,9 +20,9 @@ module.exports = function setupUserRoutes(app, db) {
     return promisify(db.get.bind(db))(query, username);
   };
 
-  const createUser = async (username, passwordHash) => {
-    const query = 'INSERT INTO users (username, password_hash) VALUES (?, ?)';
-    return promisify(db.run.bind(db))(query, username, passwordHash);
+  const createUser = async (username, email, passwordHash) => {
+    const query = 'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)';
+    return promisify(db.run.bind(db))(query, username, email, passwordHash);
   };
 
   const createSession = async (userId, fingerprint, expiresAt) => {
@@ -83,6 +84,26 @@ module.exports = function setupUserRoutes(app, db) {
     return promisify(db.run.bind(db))(q, codes, id);
   };
 
+  const runStmt = (q, params=[]) => new Promise((res, rej) => {
+    db.run(q, params, function(err){ if(err) rej(err); else res(this); });
+  });
+
+  const addPending = async (username, email, hash, code, action) => {
+    const q = 'INSERT INTO pending_codes (username,email,password_hash,code,action,created_at) VALUES (?,?,?,?,?,?)';
+    const stmt = await runStmt(q, [username, email, hash, code, action, Date.now()]);
+    return stmt.lastID;
+  };
+
+  const getPending = async (id) => {
+    const q = 'SELECT * FROM pending_codes WHERE id=?';
+    return promisify(db.get.bind(db))(q, id);
+  };
+
+  const removePending = async (id) => {
+    const q = 'DELETE FROM pending_codes WHERE id=?';
+    return promisify(db.run.bind(db))(q, id);
+  };
+
   const generateToken = (user, days, extra = {}) => {
     const opts = days && days > 1 && days < 14 ? { expiresIn: `${days}d` } : { expiresIn: '1h' };
     return jwt.sign({ id: user.id, username: user.username, ...extra }, SECRET, opts);
@@ -129,17 +150,34 @@ module.exports = function setupUserRoutes(app, db) {
 
   // ----- Routes -----
   app.post('/register', async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Missing data' });
     }
     try {
       const existing = await getUserByUsername(username);
-      if (existing) {
-        return res.status(409).json({ error: 'User already exists' });
-      }
+      if (existing) return res.status(409).json({ error: 'User already exists' });
       const hash = await bcrypt.hash(password, 10);
-      await createUser(username, hash);
+      const code = Math.random().toString(36).slice(-6);
+      const id = await addPending(username, email, hash, code, 'register');
+      sendCode(email, code).catch(() => {});
+      res.json({ id });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.post('/register/verify', async (req, res) => {
+    const { id, code } = req.body;
+    if (!id || !code) return res.status(400).json({ error: 'Missing data' });
+    try {
+      const record = await getPending(id);
+      if (!record || record.code !== code || record.action !== 'register') {
+        return res.status(400).json({ error: 'Invalid code' });
+      }
+      await createUser(record.username, record.email, record.password_hash);
+      await removePending(id);
       res.status(201).json({ message: 'User registered' });
     } catch (err) {
       console.error(err);
@@ -210,6 +248,37 @@ module.exports = function setupUserRoutes(app, db) {
       const hash = await bcrypt.hash(newPassword, 10);
       await updateUserPassword(user.id, hash);
       res.json({ message: 'Password changed' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.post('/change-email', authenticateToken, async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Missing email' });
+    try {
+      const code = Math.random().toString(36).slice(-6);
+      const id = await addPending(req.user.username, email, null, code, 'change');
+      sendCode(email, code).catch(() => {});
+      res.json({ id });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.post('/change-email/verify', authenticateToken, async (req, res) => {
+    const { id, code } = req.body;
+    if (!id || !code) return res.status(400).json({ error: 'Missing data' });
+    try {
+      const record = await getPending(id);
+      if (!record || record.code !== code || record.action !== 'change' || record.username !== req.user.username) {
+        return res.status(400).json({ error: 'Invalid code' });
+      }
+      await promisify(db.run.bind(db))('UPDATE users SET email=? WHERE username=?', record.email, req.user.username);
+      await removePending(id);
+      res.json({ message: 'updated' });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Server error' });
@@ -494,6 +563,39 @@ module.exports = function setupUserRoutes(app, db) {
     try {
       await removePasskey(req.user.id, credId);
       res.json({ message: 'removed' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.post('/recover', async (req, res) => {
+    const { username } = req.body;
+    if (!username) return res.status(400).json({ error: 'Missing username' });
+    try {
+      const user = await getUserByUsername(username);
+      if (!user || !user.email) return res.status(404).json({ error: 'Not found' });
+      const code = Math.random().toString(36).slice(-6);
+      const id = await addPending(username, user.email, null, code, 'recover');
+      sendCode(user.email, code).catch(() => {});
+      res.json({ id });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+
+  app.post('/recover/verify', async (req, res) => {
+    const { id, code } = req.body;
+    if (!id || !code) return res.status(400).json({ error: 'Missing data' });
+    try {
+      const record = await getPending(id);
+      if (!record || record.code !== code || record.action !== 'recover') return res.status(400).json({ error: 'Invalid code' });
+      const user = await getUserByUsername(record.username);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      await removePending(id);
+      const token = generateToken(user, 1);
+      res.json({ token });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Server error' });
