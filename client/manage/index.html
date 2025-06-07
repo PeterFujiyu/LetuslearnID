@@ -22,10 +22,11 @@
       const [locale, setLocale] = React.useState(localStorage.getItem('locale') || 'en_us');
       const [t, setT] = React.useState({});
 
+      const token = localStorage.getItem('token');
+      const [admin,setAdmin]=React.useState(false);
       React.useEffect(() => {
-        const token = localStorage.getItem('token');
         if (!token) { window.location.href = '/index/index.html'; return; }
-        fetch('/profile', { headers:{ 'Authorization':'Bearer '+token } }).then(r=>{ if(!r.ok) window.location.href='/index/index.html'; });
+        fetch('/profile', { headers:{ 'Authorization':'Bearer '+token } }).then(r=>r.ok?r.json():null).then(d=>{ if(!d) {window.location.href='/index/index.html';return;} setAdmin(d.groups&&d.groups.includes('admin')); });
       }, []);
 
       React.useEffect(() => {
@@ -43,6 +44,7 @@
             React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
           ),
           React.createElement('h1', null, t.manage_title),
+          admin ? React.createElement('button',{className:'button',onClick:()=>window.location.href='/admin/?t='+token},'Admin') : null,
           React.createElement('button', { className:'button', onClick:() => window.location.href='/settings/index.html' }, t.settings_title)
         )
       );
