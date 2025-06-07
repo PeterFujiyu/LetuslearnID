@@ -1,13 +1,21 @@
 const { sendCode } = require('./email');
-const code = process.argv[2] || 'test';
-const email = process.argv[3];
-if (!email) {
-  console.error('Usage: npm run testemailsmtp "code" "email"');
-  process.exit(1);
-}
-sendCode(email, code, 'cli').then(()=>{
-  console.log('Email sent');
-}).catch(err=>{
-  console.error(err);
-  process.exit(1);
+const assert = require('assert');
+
+describe('邮件发送功能', function() {
+  this.timeout(30000); // 邮件发送可能较慢，设为10秒
+  const code = process.env.TEST_CODE || 'test';
+  const email = process.env.TEST_EMAIL;
+  it('应该成功发送邮件', async function() {
+    if (!email) {
+      // 没有 email 就跳过
+      this.skip();
+    }
+    let error = null;
+    try {
+      await sendCode(email, code, 'mocha-test');
+    } catch (err) {
+      error = err;
+    }
+    assert.strictEqual(error, null, error ? error.message : '');
+  });
 });

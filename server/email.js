@@ -12,7 +12,15 @@ async function sendCode(to, code, ip, subject = config.subject) {
       .replace('{code}', code)
       .replace('{ip}', ip)
   };
-  await transporter.sendMail(msg);
+  console.log('[sendCode] 准备发送邮件:', msg);
+  try {
+    console.log('[sendCode] 调用 transporter.sendMail...');
+    const info = await transporter.sendMail(msg);
+    console.log('[sendCode] 邮件已发送:', info);
+  } catch (err) {
+    console.error('[sendCode] 发送邮件出错:', err);
+    throw err;
+  }
 }
 
 module.exports = { sendCode };
