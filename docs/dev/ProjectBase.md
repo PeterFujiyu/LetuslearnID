@@ -47,6 +47,8 @@
 
 ```bash
 cd server && npm install
+cp emailconfig.example.json emailconfig.json
+vim emailconfig.json # 配置SMTP服务
 ```
 首次安装会通过 Playwright 下载 Chromium 浏览器文件，仅占用较小空间，如需其他浏览器可手动执行 `npx playwright install`。
 
