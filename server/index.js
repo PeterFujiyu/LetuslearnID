@@ -437,6 +437,9 @@ app.post('/passkey/register', authenticateToken, async (req, res) => {
       expectedOrigin: `http://${req.headers.host}`,
       expectedRPID: req.headers.host.split(':')[0]
     });
+    if (!verification.verified || !verification.registrationInfo) {
+      throw new Error('Failed');
+    }
     const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
     await addPasskey(
       req.user.id,
@@ -496,6 +499,9 @@ app.post('/passkey/auth', async (req, res) => {
         counter: key.counter
       }
     });
+    if (!verification.verified || !verification.authenticationInfo) {
+      throw new Error('Failed');
+    }
     await updatePasskeyCounter(key.credential_id, verification.authenticationInfo.newCounter);
     const daysLeft = Math.max(1, Math.round((data.sess.expires_at - Date.now()) / 86400000));
     const token = generateToken(user, daysLeft);
