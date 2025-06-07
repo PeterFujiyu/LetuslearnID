@@ -1,16 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Success</title>
+  <title></title>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; background:#f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; animation:fadeIn .3s ease; }
-    .box { background:#fff; padding:30px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; width:360px; }
-    .button { width:100%; padding:10px; background:#000; color:#fff; border:none; border-radius:20px; cursor:pointer; margin-top:20px; }
-    .button:hover { background:#333; }
-    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      animation: fadeIn .3s ease;
+    }
+
+    .box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 360px;
+    }
+
+    .button {
+      width: 100%;
+      padding: 10px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .button:hover {
+      background: #333;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div id="root"></div>
   <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
@@ -31,10 +72,11 @@
           .then(res => res.json())
           .then(data => {
             setT(data);
+            // 优先用msg，其次用i18n的success字段
             const msg = msgParam ? (data[msgParam] || msgParam) :
               (type === 'register' ? data.register_success : data.login_success);
             setMessage(msg);
-            document.title = msg;
+            document.title = msg || data.success; // 这里加上 data.success 兜底
           })
           .catch(() => setT({}));
       }, [locale]);
@@ -43,23 +85,24 @@
         const msg = msgParam ? (t[msgParam] || msgParam) :
           (type === 'register' ? t.register_success : t.login_success);
         setMessage(msg);
-        document.title = msg;
+        document.title = msg || t.success; // 这里也加 t.success 兜底
       }, [t]);
 
       const next = nextParam || (type === 'register' ? '../index/index.html' : '../manage/index.html');
 
       return (
-        React.createElement('div', { className:'box' },
-          React.createElement('select', { value:locale, onChange:e=>setLocale(e.target.value) },
-            React.createElement('option', { value:'en_us' }, 'English'),
-            React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
+        React.createElement('div', { className: 'box' },
+          React.createElement('select', { value: locale, onChange: e => setLocale(e.target.value) },
+            React.createElement('option', { value: 'en_us' }, 'English'),
+            React.createElement('option', { value: 'zh_cn' }, '\u4e2d\u6587')
           ),
           React.createElement('h1', null, message),
-          React.createElement('button', { className:'button', onClick:() => window.location.href = next }, t.continue)
+          React.createElement('button', { className: 'button', onClick: () => window.location.href = next }, t.continue)
         )
       );
     }
     ReactDOM.render(React.createElement(Success), document.getElementById('root'));
   </script>
 </body>
+
 </html>
