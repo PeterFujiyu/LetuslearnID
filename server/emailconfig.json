@@ -3,7 +3,7 @@
     "host": "smtp.gmail.com",
     "port": 465,
     "secure": true,
-    "auth": { "user": "xiaoqiang.fu@gmail.com", "pass": "***" }
+    "auth": { "user": "xiaoqiang.fu@gmail.com", "pass": "nvpt wlxg z yzf dflj" }
   },
   "from": "xiaoqiang.fu@gmail.com",
   "subject": "LetuslearnID verification code",
