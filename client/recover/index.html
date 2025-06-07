@@ -20,11 +20,11 @@ function Recover(){
   const [name,setName]=React.useState('');
   const [locale,setLocale]=React.useState(localStorage.getItem('locale')||'en_us');
   const [t,setT]=React.useState({});
-  React.useEffect(()=>{localStorage.setItem('locale',locale);fetch(`../../i18n/${locale}.json`).then(r=>r.json()).then(d=>{setT(d);document.title='Recover';}).catch(()=>setT({}));},[locale]);
+  React.useEffect(()=>{localStorage.setItem('locale',locale);fetch(`/i18n/${locale}.json`).then(r=>r.json()).then(d=>{setT(d);document.title='Recover';}).catch(()=>setT({}));},[locale]);
   const next=async()=>{
     const r=await fetch('/recover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:name})});
     const d=await r.json();
-    if(r.ok){sessionStorage.setItem('recovery_id',d.id);window.location.href='./verify.html';}else{window.location.href='../failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
+    if(r.ok){sessionStorage.setItem('recovery_id',d.id);window.location.href='/recover/verify.html';}else{window.location.href='/failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
   };
   return React.createElement('div',{className:'box'},[
     React.createElement('select',{key:0,value:locale,onChange:e=>setLocale(e.target.value)},[

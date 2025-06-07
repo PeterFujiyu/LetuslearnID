@@ -24,13 +24,13 @@
 
       React.useEffect(() => {
         const token = localStorage.getItem('token');
-        if (!token) { window.location.href = '../index/index.html'; return; }
-        fetch('/profile', { headers:{ 'Authorization':'Bearer '+token } }).then(r=>{ if(!r.ok) window.location.href='../index/index.html'; });
+        if (!token) { window.location.href = '/index/index.html'; return; }
+        fetch('/profile', { headers:{ 'Authorization':'Bearer '+token } }).then(r=>{ if(!r.ok) window.location.href='/index/index.html'; });
       }, []);
 
       React.useEffect(() => {
         localStorage.setItem('locale', locale);
-        fetch(`../../i18n/${locale}.json`)
+        fetch(`/i18n/${locale}.json`)
           .then(res => res.json())
           .then(data => { setT(data); document.title = data.manage_title || 'Manage'; })
           .catch(() => setT({}));
@@ -43,7 +43,7 @@
             React.createElement('option', { value:'zh_cn' }, '\u4e2d\u6587')
           ),
           React.createElement('h1', null, t.manage_title),
-          React.createElement('button', { className:'button', onClick:() => window.location.href='../settings/index.html' }, t.settings_title)
+          React.createElement('button', { className:'button', onClick:() => window.location.href='/settings/index.html' }, t.settings_title)
         )
       );
     }

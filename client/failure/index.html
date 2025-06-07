@@ -25,7 +25,7 @@
 
       React.useEffect(() => {
         localStorage.setItem('locale', locale);
-        fetch(`../../i18n/${locale}.json`)
+        fetch(`/i18n/${locale}.json`)
           .then(res => res.json())
           .then(data => { setT(data); document.title = data.error_title || 'Failure'; })
           .catch(() => setT({}));

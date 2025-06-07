@@ -12,7 +12,7 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="../utils/fingerprint.js"></script>
+<script src="/utils/fingerprint.js"></script>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 <script>
@@ -30,14 +30,14 @@ function Confirm(){
     const cred=await navigator.credentials.create({publicKey:opts});
     const b=b=>bufToB64(b);
     await fetch('/passkey/register',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({id:cred.id,rawId:b(cred.rawId),response:{attestationObject:b(cred.response.attestationObject),clientDataJSON:b(cred.response.clientDataJSON)},type:cred.type})});
-    window.location.href='../success/index.html?msg=Success&next=manage.html';
+    window.location.href='/success/index.html?msg=Success&next=/passkey/manage.html';
   };
   const disable=async()=>{
     const token=localStorage.getItem('token');
     await fetch('/passkey/remove',{method:'POST',headers:{'Authorization':'Bearer '+token}});
-    window.location.href='../success/index.html?msg=Success&next=manage.html';
+    window.location.href='/success/index.html?msg=Success&next=/passkey/manage.html';
   };
-  const cancel=()=>{window.location.href='manage.html';};
+  const cancel=()=>{window.location.href='/passkey/manage.html';};
   return React.createElement('div',{className:'box'},[
     React.createElement('p',{key:0},action==='enable'?'确认开启通行密钥?':'确认关闭通行密钥?'),
     React.createElement('button',{key:1,className:'button',onClick:action==='enable'?enable:disable},'确认'),

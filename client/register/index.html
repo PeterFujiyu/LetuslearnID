@@ -29,7 +29,7 @@
 
       React.useEffect(() => {
         localStorage.setItem('locale', locale);
-        fetch(`../../i18n/${locale}.json`)
+        fetch(`/i18n/${locale}.json`)
           .then(res => res.json())
           .then(data => { setT(data); document.title = data.register || 'Register'; })
           .catch(() => setT({}));
@@ -38,7 +38,7 @@
       const next = () => {
         sessionStorage.setItem('reg_name', username);
         sessionStorage.setItem('reg_email', email);
-        window.location.href = './password.html';
+        window.location.href = '/register/password.html';
       };
 
       return (
@@ -52,7 +52,7 @@
           React.createElement('input', { type:'email', placeholder:t.email || 'Email', value:email, onChange:e=>setEmail(e.target.value) }),
           React.createElement('button', { className:'button', onClick:next }, t.continue),
           React.createElement('p', { className:'tip' },
-            React.createElement('a', { href:'../index/index.html' }, t.have_account)
+            React.createElement('a', { href:'/index/index.html' }, t.have_account)
           )
         )
       );

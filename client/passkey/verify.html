@@ -12,7 +12,7 @@
 </head>
 <body>
 <div id="root">Processing...</div>
-<script src="../utils/fingerprint.js"></script>
+<script src="/utils/fingerprint.js"></script>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 <script>
@@ -25,7 +25,7 @@ function VerifyPasskey(){
       if(t)h['Authorization']='Bearer '+t;
       const optRes=await fetch('/passkey/auth-options',{method:'POST',headers:h,body:JSON.stringify({fingerprint:fp})});
       if(!optRes.ok){
-        window.location.href='../failure/index.html?msg=No%20passkey';
+        window.location.href='/failure/index.html?msg=No%20passkey';
         return;
       }
       const opts=await optRes.json();
@@ -49,13 +49,13 @@ function VerifyPasskey(){
       const data=await vr.json();
       if(vr.ok&&data.token){
         localStorage.setItem('token',data.token);
-        window.location.href='../manage/index.html';
+        window.location.href='/manage/index.html';
       }else{
-        window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
+        window.location.href='/failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
       }
     })();
   },[]);
-  const cancel=()=>{window.location.href='../totp/verify.html';};
+  const cancel=()=>{window.location.href='/totp/verify.html';};
   return React.createElement('div',{className:'box'},[
     React.createElement('div',{key:0},'Processing...'),
     React.createElement('button',{key:1,className:'button',onClick:cancel},'取消')

@@ -36,8 +36,8 @@ function Setup(){
     React.createElement('p',{key:3},'请使用双因子认证器扫描下方二维码\n如「Google Authenticator」「1Password」等'),
     React.createElement('ul',{key:4},data.codes.map((c,i)=>React.createElement('li',{key:i},c))),
     React.createElement('button',{key:5,className:'button',onClick:download},'下载备份代码'),
-    React.createElement('button',{key:6,className:'button',onClick:()=>{fetch('/totp/cancel',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('token')}}).finally(()=>{window.location.href='../settings/index.html';});}},'取消'),
-    React.createElement('button',{key:7,className:'button',onClick:()=>{sessionStorage.setItem('totpAction','verify');window.location.href='confirm.html';}},'下一步')
+    React.createElement('button',{key:6,className:'button',onClick:()=>{fetch('/totp/cancel',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('token')}}).finally(()=>{window.location.href='/settings/index.html';});}},'取消'),
+    React.createElement('button',{key:7,className:'button',onClick:()=>{sessionStorage.setItem('totpAction','verify');window.location.href='/totp/confirm.html';}},'下一步')
   ]);
 }
 ReactDOM.render(React.createElement(Setup),document.getElementById('root'));
