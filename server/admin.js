@@ -143,6 +143,12 @@ module.exports = function(app, db, auth){
     const {sql,args=[]} = req.body;
     if(!sql) return res.status(400).json({error:'missing sql'});
     try{
+      if(sql.trim() === '.tables'){
+        const tbs = await promisify(db.all.bind(db))(
+          "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        );
+        return res.json({rows:tbs.map(t=>t.name)});
+      }
       const rows = await promisify(db.all.bind(db))(sql, args);
       res.json({rows});
     }catch(err){
