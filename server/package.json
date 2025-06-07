@@ -9,7 +9,6 @@
     "e2e": "mocha test/e2e.test.js",
     "start": "node index.js",
     "postinstall": "npx playwright install chromium",
-    "testemailsmtp": "node testemailsmtp.js"
   },
   "keywords": [],
   "author": "",
