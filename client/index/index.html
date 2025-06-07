@@ -50,7 +50,7 @@
         fetch(`../../i18n/${locale}.json`).then(r=>r.json()).then(d=>{setT(d);document.title=d.title||'Login';}).catch(()=>setT({}));
       },[locale]);
 
-        const next=()=>{sessionStorage.setItem('login_user',username);window.location.href='/index/password.html';};
+        const next=()=>{sessionStorage.setItem('login_user',username);window.location.href='index/password.html';};
 
       return React.createElement('div',{className:'container'},[
         React.createElement('select',{key:0,value:locale,onChange:e=>setLocale(e.target.value)},[
