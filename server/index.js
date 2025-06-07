@@ -465,25 +465,31 @@ app.post('/passkey/register', authenticateToken, async (req, res) => {
 });
 
 app.post('/passkey/auth-options', async (req, res) => {
-  const { fingerprint } = req.body;
+  const { fingerprint, username } = req.body;
   if (!fingerprint) return res.status(400).json({ error: 'Missing fingerprint' });
   try {
     let sess = await getValidSession(fingerprint);
     let uid, remember;
     if (!sess) {
       const auth = req.headers['authorization'];
-      if (!auth) return res.status(404).json({ error: 'Not found' });
-      try {
-        const token = auth.split(' ')[1];
-        const info = jwt.verify(token, SECRET);
-        const user = await getUserByUsername(info.username);
-        if (!user || (info.fingerprint && info.fingerprint !== fingerprint)) {
+      if (!auth) {
+        if (!username) return res.status(404).json({ error: 'Not found' });
+        const user = await getUserByUsername(username);
+        if (!user) return res.status(404).json({ error: 'Not found' });
+        uid = user.id;
+      } else {
+        try {
+          const token = auth.split(' ')[1];
+          const info = jwt.verify(token, SECRET);
+          const user = await getUserByUsername(info.username);
+          if (!user || (info.fingerprint && info.fingerprint !== fingerprint)) {
+            return res.status(404).json({ error: 'Not found' });
+          }
+          uid = user.id;
+          remember = info.remember;
+        } catch (e) {
           return res.status(404).json({ error: 'Not found' });
         }
-        uid = user.id;
-        remember = info.remember;
-      } catch (e) {
-        return res.status(404).json({ error: 'Not found' });
       }
     } else {
       uid = sess.user_id;

@@ -96,4 +96,18 @@ describe('Passkey endpoints', () => {
       .send({ rawId: rid, response: {}, type: 'public-key' });
     assert.strictEqual(res.status, 400);
   });
+
+  it('auth options using username', async () => {
+    const uid = (await get('SELECT id FROM users WHERE username=?', 'pkuser')).id;
+    await run("INSERT INTO passkeys (user_id, credential_id, public_key, counter) VALUES (?, ?, 'k', 0)", uid, Buffer.from('u123').toString('base64url'));
+    const opt = await request(app)
+      .post('/passkey/auth-options')
+      .send({ fingerprint: 'fpu', username: 'pkuser' });
+    assert.strictEqual(opt.status, 200);
+    assert.ok(opt.body.challenge);
+    const res = await request(app)
+      .post('/passkey/auth?fingerprint=fpu')
+      .send({ rawId: Buffer.from('u123').toString('base64'), response: {}, type: 'public-key' });
+    assert.strictEqual(res.status, 400);
+  });
 });
