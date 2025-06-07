@@ -27,3 +27,14 @@ This design allows storage of password changes, email updates, two‑factor sett
 | `credential_id` | TEXT    | Credential ID for WebAuthn |
 | `public_key`  | TEXT      | Stored public key |
 | `counter`     | INTEGER   | Signature counter |
+
+## Verifycode Table
+
+| Column name  | Type        | Description |
+|--------------|------------|-------------|
+| `id`         | INTEGER PK | Unique identifier |
+| `user_id`    | INTEGER    | Related user id |
+| `ip`         | TEXT       | Request IP address |
+| `code`       | TEXT       | Numeric verification code |
+| `expires_at` | INTEGER    | Expiration timestamp |
+| `authorized` | INTEGER    | 1 if verified |

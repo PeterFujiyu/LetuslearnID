@@ -104,6 +104,29 @@ module.exports = function setupUserRoutes(app, db) {
     return promisify(db.run.bind(db))(q, id);
   };
 
+  const getVerifyCode = async (uid, ip) => {
+    const q = 'SELECT * FROM verifycode WHERE user_id=? AND ip=? AND authorized=0 AND expires_at>? ORDER BY id DESC LIMIT 1';
+    return promisify(db.get.bind(db))(q, uid, ip, Date.now());
+  };
+
+  const createVerifyCode = async (uid, ip, code) => {
+    const q = 'INSERT INTO verifycode (user_id, ip, code, expires_at) VALUES (?,?,?,?)';
+    return promisify(db.run.bind(db))(q, uid, ip, code, Date.now() + 600000);
+  };
+
+  const markVerifyCode = async (id) => {
+    const q = 'UPDATE verifycode SET authorized=1 WHERE id=?';
+    return promisify(db.run.bind(db))(q, id);
+  };
+
+  const getOrCreateCode = async (uid, ip) => {
+    const rec = await getVerifyCode(uid, ip);
+    if (rec) return { code: rec.code, id: rec.id };
+    const code = Math.floor(100000 + Math.random()*900000).toString();
+    const stmt = await createVerifyCode(uid, ip, code);
+    return { code, id: stmt.lastID };
+  };
+
   const generateToken = (user, days, extra = {}) => {
     const opts = days && days > 1 && days < 14 ? { expiresIn: `${days}d` } : { expiresIn: '1h' };
     return jwt.sign({ id: user.id, username: user.username, ...extra }, SECRET, opts);
@@ -158,9 +181,9 @@ module.exports = function setupUserRoutes(app, db) {
       const existing = await getUserByUsername(username);
       if (existing) return res.status(409).json({ error: 'User already exists' });
       const hash = await bcrypt.hash(password, 10);
-      const code = Math.random().toString(36).slice(-6);
+      const { code } = await getOrCreateCode(0, req.ip);
       const id = await addPending(username, email, hash, code, 'register');
-      sendCode(email, code).catch(() => {});
+      sendCode(email, code, req.ip).catch(() => {});
       res.json({ id });
     } catch (err) {
       console.error(err);
@@ -178,6 +201,7 @@ module.exports = function setupUserRoutes(app, db) {
       }
       await createUser(record.username, record.email, record.password_hash);
       await removePending(id);
+      await promisify(db.run.bind(db))('UPDATE verifycode SET authorized=1 WHERE code=? AND ip=? AND authorized=0', record.code, req.ip);
       res.status(201).json({ message: 'User registered' });
     } catch (err) {
       console.error(err);
@@ -258,9 +282,9 @@ module.exports = function setupUserRoutes(app, db) {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'Missing email' });
     try {
-      const code = Math.random().toString(36).slice(-6);
+      const { code } = await getOrCreateCode(req.user.id, req.ip);
       const id = await addPending(req.user.username, email, null, code, 'change');
-      sendCode(email, code).catch(() => {});
+      sendCode(email, code, req.ip).catch(() => {});
       res.json({ id });
     } catch (err) {
       console.error(err);
@@ -278,6 +302,7 @@ module.exports = function setupUserRoutes(app, db) {
       }
       await promisify(db.run.bind(db))('UPDATE users SET email=? WHERE username=?', record.email, req.user.username);
       await removePending(id);
+      await promisify(db.run.bind(db))('UPDATE verifycode SET authorized=1 WHERE code=? AND ip=? AND authorized=0', record.code, req.ip);
       res.json({ message: 'updated' });
     } catch (err) {
       console.error(err);
@@ -575,9 +600,9 @@ module.exports = function setupUserRoutes(app, db) {
     try {
       const user = await getUserByUsername(username);
       if (!user || !user.email) return res.status(404).json({ error: 'Not found' });
-      const code = Math.random().toString(36).slice(-6);
+      const { code } = await getOrCreateCode(user.id, req.ip);
       const id = await addPending(username, user.email, null, code, 'recover');
-      sendCode(user.email, code).catch(() => {});
+      sendCode(user.email, code, req.ip).catch(() => {});
       res.json({ id });
     } catch (err) {
       console.error(err);
@@ -594,6 +619,7 @@ module.exports = function setupUserRoutes(app, db) {
       const user = await getUserByUsername(record.username);
       if (!user) return res.status(404).json({ error: 'User not found' });
       await removePending(id);
+      await promisify(db.run.bind(db))('UPDATE verifycode SET authorized=1 WHERE code=? AND ip=? AND authorized=0', record.code, req.ip);
       const token = generateToken(user, 1);
       res.json({ token });
     } catch (err) {

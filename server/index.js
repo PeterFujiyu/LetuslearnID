@@ -41,6 +41,14 @@ const initDb = () => {
     action TEXT,
     created_at INTEGER
   )`;
+  const verifyQuery = `CREATE TABLE IF NOT EXISTS verifycode (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    ip TEXT,
+    code TEXT,
+    expires_at INTEGER,
+    authorized INTEGER DEFAULT 0
+  )`;
   const sessionQuery = `CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -57,6 +65,7 @@ const initDb = () => {
     promisify(db.run.bind(db))(passkeyQuery),
     promisify(db.run.bind(db))(sessionQuery),
     promisify(db.run.bind(db))(pendingQuery),
+    promisify(db.run.bind(db))(verifyQuery),
     ...alters.map(a => promisify(db.run.bind(db))(a).catch(() => {}))
   ]);
 };

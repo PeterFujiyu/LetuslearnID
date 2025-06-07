@@ -28,7 +28,7 @@ LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](ht
   },
   "from": "noreply@example.com",
   "subject": "LetuslearnID verification code",
-  "template": "Your verification code is {code}"
+  "template": "Your verification code is {code}. IP: {ip}. If this wasn't you please ignore this email."
 }
 ```
 
