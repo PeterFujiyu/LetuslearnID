@@ -1,0 +1,14 @@
+{
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 465,
+    "secure": true,
+    "auth": {
+      "user": "xiaoqiang.fu@gmail.com",
+      "pass": "nvpt wlxg z yzf dflj"
+    }
+  },
+  "from": "noreply@letuslearn.com",
+  "subject": "LetuslearnID verification code",
+  "template": "Your verification code is {code}"
+}
