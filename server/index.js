@@ -134,9 +134,9 @@ const SECRET = process.env.JWT_SECRET || 'dev-secret';
 
 const revokedTokens = new Set();
 
-const generateToken = (user, days) => {
+const generateToken = (user, days, extra = {}) => {
   const opts = days && days > 1 && days < 14 ? { expiresIn: `${days}d` } : { expiresIn: '1h' };
-  return jwt.sign({ id: user.id, username: user.username }, SECRET, opts);
+  return jwt.sign({ id: user.id, username: user.username, ...extra }, SECRET, opts);
 };
 
 const authenticateToken = (req, res, next) => {
@@ -315,13 +315,15 @@ app.post('/totp/verify', async (req, res) => {
 });
 
 app.post('/totp/regenerate', authenticateToken, async (req, res) => {
-  const { code } = req.body;
-  if (!code) return res.status(400).json({ error: 'Missing code' });
+  const { code } = req.body || {};
+  if (!code && !req.user.passkey) return res.status(400).json({ error: 'Missing code' });
   try {
     const user = await getUserByUsername(req.user.username);
     if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
-    const valid = await verifyTotp(user, code);
-    if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    if (code) {
+      const valid = await verifyTotp(user, code);
+      if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    }
     const codes = genCodes();
     await updateBackupCodes(req.user.id, JSON.stringify(codes));
     res.json({ codes });
@@ -332,13 +334,15 @@ app.post('/totp/regenerate', authenticateToken, async (req, res) => {
 });
 
 app.post('/totp/check', authenticateToken, async (req, res) => {
-  const { code } = req.body;
-  if (!code) return res.status(400).json({ error: 'Missing code' });
+  const { code } = req.body || {};
+  if (!code && !req.user.passkey) return res.status(400).json({ error: 'Missing code' });
   try {
     const user = await getUserByUsername(req.user.username);
     if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
-    const valid = await verifyTotp(user, code);
-    if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    if (code) {
+      const valid = await verifyTotp(user, code);
+      if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    }
     res.json({ message: 'ok' });
   } catch (err) {
     console.error(err);
@@ -357,13 +361,15 @@ app.post('/totp/cancel', authenticateToken, async (req, res) => {
 });
 
 app.post('/totp/disable', authenticateToken, async (req, res) => {
-  const { code } = req.body;
-  if (!code) return res.status(400).json({ error: 'Missing code' });
+  const { code } = req.body || {};
+  if (!code && !req.user.passkey) return res.status(400).json({ error: 'Missing code' });
   try {
     const user = await getUserByUsername(req.user.username);
     if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
-    const valid = await verifyTotp(user, code);
-    if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    if (code) {
+      const valid = await verifyTotp(user, code);
+      if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    }
     await disableTotp(user.id);
     res.json({ message: 'disabled' });
   } catch (err) {
@@ -373,13 +379,15 @@ app.post('/totp/disable', authenticateToken, async (req, res) => {
 });
 
 app.post('/totp/update', authenticateToken, async (req, res) => {
-  const { code } = req.body;
-  if (!code) return res.status(400).json({ error: 'Missing code' });
+  const { code } = req.body || {};
+  if (!code && !req.user.passkey) return res.status(400).json({ error: 'Missing code' });
   try {
     const user = await getUserByUsername(req.user.username);
     if (!user || !user.totp_secret) return res.status(400).json({ error: 'No totp' });
-    const valid = await verifyTotp(user, code);
-    if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    if (code) {
+      const valid = await verifyTotp(user, code);
+      if (!valid) return res.status(401).json({ error: 'Invalid code' });
+    }
     const secret = authenticator.generateSecret();
     const url = authenticator.keyuri(req.user.username, 'LetuslearnID', secret);
     const codes = genCodes();
@@ -523,7 +531,7 @@ app.post('/passkey/auth', async (req, res) => {
     });
     await updatePasskeyCounter(key.credential_id, verification.authenticationInfo.newCounter);
     const days = data.sess ? Math.max(1, Math.round((data.sess.expires_at - Date.now()) / 86400000)) : (data.remember || 1);
-    const token = generateToken(user, days);
+    const token = generateToken(user, days, { passkey: true });
     delete challenges[fingerprint];
     res.json({ token });
   } catch (err) {
