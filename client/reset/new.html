@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New Password</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;animation:fadeIn .3s ease;}
+    .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-align:center;width:360px;}
+    input{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:4px;}
+    .button{width:100%;padding:10px;background:#000;color:#fff;border:none;border-radius:20px;cursor:pointer;margin-top:10px;}
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+<script>
+function NewPass(){
+  const [pwd,setPwd]=React.useState('');
+  const [confirm,setConfirm]=React.useState('');
+  const [locale,setLocale]=React.useState(localStorage.getItem('locale')||'en_us');
+  const [t,setT]=React.useState({});
+  React.useEffect(()=>{localStorage.setItem('locale',locale);fetch(`/i18n/${locale}.json`).then(r=>r.json()).then(d=>{setT(d);document.title='Reset';}).catch(()=>setT({}));},[locale]);
+  const submit=async()=>{
+    if(pwd!==confirm){window.location.href='/failure/index.html?msg='+encodeURIComponent('Mismatch');return;}
+    const id=sessionStorage.getItem('reset_id');
+    const code=sessionStorage.getItem('reset_code');
+    const r=await fetch('/reset-password/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,code,password:pwd})});
+    const d=await r.json();
+    if(r.ok){window.location.href='/success/index.html?msg='+encodeURIComponent(t.success)+'&next=/index/index.html';}
+    else{window.location.href='/failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
+  };
+  return React.createElement('div',{className:'box'},[
+    React.createElement('select',{key:0,value:locale,onChange:e=>setLocale(e.target.value)},[
+      React.createElement('option',{value:'en_us',key:0},'English'),
+      React.createElement('option',{value:'zh_cn',key:1},'\u4e2d\u6587')
+    ]),
+    React.createElement('input',{key:1,placeholder:t.new_password||'New Password',type:'password',value:pwd,onChange:e=>setPwd(e.target.value)}),
+    React.createElement('input',{key:2,placeholder:t.confirm_password||'Confirm',type:'password',value:confirm,onChange:e=>setConfirm(e.target.value)}),
+    React.createElement('button',{key:3,className:'button',onClick:submit},t.continue)
+  ]);
+}
+ReactDOM.render(React.createElement(NewPass),document.getElementById('root'));
+</script>
+</body>
+</html>

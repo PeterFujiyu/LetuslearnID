@@ -163,6 +163,7 @@
           React.createElement('button', { className:'button', onClick:handleChangeEmail },
             React.createElement('i', { className:'fa-solid fa-envelope icon-white' }), t.change_email
           ),
+          React.createElement('button', { className:'button', onClick:()=>window.location.href='/reset/index.html' }, t.reset_via_code),
           React.createElement('div', { style:{position:'relative'} },
             React.createElement('input', { type:showOld?'text':'password', placeholder:t.current_password, value:oldPassword, onChange:e=>setOldPassword(e.target.value), onCopy:e=>e.preventDefault() }),
             React.createElement('i', { className:'fa-solid ' + (showOld?'fa-eye-slash':'fa-eye'), onClick:()=>setShowOld(!showOld), style:{position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', cursor:'pointer'} })
