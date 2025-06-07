@@ -2,7 +2,9 @@
 const { chromium } = require('playwright');
 const assert = require('assert');
 process.env.DB_FILE = ':memory:';
-const { app, initDb } = require('../index');  // 确保 index.js 导出了 app、initDb
+const { app, initDb, db } = require('../index');  // 确保 index.js 导出了 app、initDb
+const { promisify } = require('util');
+const get = promisify(db.get.bind(db));
 
 let server, browser, page;
 
@@ -42,11 +44,18 @@ describe('Browser flows', function() {
       const r = await fetch('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: u, password: p })
+        body: JSON.stringify({ username: u, email: 'u@e.test', password: p })
       });
       return { status: r.status, body: await r.json() };
     }, { u: username, p: password });
-    assert.strictEqual(res.status, 201);
+    assert.strictEqual(res.status, 200);
+    const id = res.body.id;
+    const row = await get('SELECT code FROM pending_codes WHERE id=?', id);
+    const vr = await page.evaluate(async ({ i, c }) => {
+      const r = await fetch('/register/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id:i, code:c }) });
+      return { status:r.status };
+    }, { i: id, c: row.code });
+    assert.strictEqual(vr.status, 201);
 
     // 2. 登录
     res = await page.evaluate(async ({ u, p }) => {

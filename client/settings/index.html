@@ -82,6 +82,37 @@
         window.location.href = '../success/index.html?msg=' + encodeURIComponent('Saved settings') + '&next=../settings/index.html';
       };
 
+      const handleChangeEmail = async () => {
+        const token = localStorage.getItem('token');
+        try {
+          const r = await fetch('/change-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ email: newEmail })
+          });
+          const d = await r.json();
+          if (!r.ok) {
+            window.location.href = '../failure/index.html?msg=' + encodeURIComponent(d.error || 'Failed');
+            return;
+          }
+          const code = prompt(t.email_code);
+          if (!code) return;
+          const vr = await fetch('/change-email/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ id: d.id, code })
+          });
+          const vd = await vr.json();
+          if (vr.ok) {
+            window.location.href = '../success/index.html?msg=' + encodeURIComponent(t.success) + '&next=../settings/index.html';
+          } else {
+            window.location.href = '../failure/index.html?msg=' + encodeURIComponent(vd.error || 'Failed');
+          }
+        } catch (e) {
+          window.location.href = '../failure/index.html?msg=Email';
+        }
+      };
+
       const handleChangePassword = async () => {
         if (newPassword !== confirmPassword) {
           window.location.href = '../failure/index.html?msg=' + encodeURIComponent('Passwords do not match');
@@ -140,7 +171,7 @@
             ),
           React.createElement('h1', null, t.settings_title),
           React.createElement('input', { type:'email', placeholder:t.new_email, value:newEmail, onChange:e=>setNewEmail(e.target.value) }),
-          React.createElement('button', { className:'button', onClick:() => window.location.href = '../success/index.html?msg=' + encodeURIComponent(t.change_email) + '&next=../settings/index.html' },
+          React.createElement('button', { className:'button', onClick:handleChangeEmail },
             React.createElement('i', { className:'fa-solid fa-envelope icon-white' }), t.change_email
           ),
           React.createElement('div', { style:{position:'relative'} },

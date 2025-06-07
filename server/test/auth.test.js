@@ -2,6 +2,7 @@ process.env.DB_FILE = ':memory:';
 const request = require('supertest');
 const assert = require('assert');
 const jwt = require('jsonwebtoken');
+const { promisify } = require('util');
 const { app, initDb, db } = require('../index');
 
 before(async () => {
@@ -16,15 +17,18 @@ describe('POST /register', () => {
   it('creates a new user', async () => {
     const res = await request(app)
       .post('/register')
-      .send({ username: 'alice', password: 'secret' });
-    assert.strictEqual(res.status, 201);
-    assert.strictEqual(res.body.message, 'User registered');
+      .send({ username: 'alice', email:'a@b.c', password: 'secret' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(res.body.id);
+    const row = await promisify(db.get.bind(db))('SELECT code FROM pending_codes WHERE id=?', res.body.id);
+    const vr = await request(app).post('/register/verify').send({ id: res.body.id, code: row.code });
+    assert.strictEqual(vr.status, 201);
   });
 
   it('rejects duplicate usernames', async () => {
     const res = await request(app)
       .post('/register')
-      .send({ username: 'alice', password: 'secret' });
+      .send({ username: 'alice', email:'c@d.e', password: 'secret' });
     assert.strictEqual(res.status, 409);
   });
 });

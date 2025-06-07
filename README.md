@@ -14,3 +14,23 @@ LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](ht
 
 登出时页面会调用 `/logout`，携带当前指纹并在请求头中附加 token。服务器删除该指纹的会话记录并使 token 失效，浏览器随后需执行 `localStorage.removeItem('token')` 并返回登录页。
 
+## SMTP 配置
+
+项目使用 `nodemailer` 发送验证码邮件，相关设置存放在 `server/emailconfig.json`。示例如下：
+
+```json
+{
+  "smtp": {
+    "host": "smtp.example.com",
+    "port": 465,
+    "secure": true,
+    "auth": { "user": "user@example.com", "pass": "password" }
+  },
+  "from": "noreply@example.com",
+  "subject": "LetuslearnID verification code",
+  "template": "Your verification code is {code}"
+}
+```
+
+按需修改 `smtp` 字段以匹配实际的邮件服务器地址和凭据，即可在注册、找回凭据及修改邮箱时收到验证码邮件。
+
