@@ -13,7 +13,7 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="../utils/fingerprint.js"></script>
+<script src="/utils/fingerprint.js"></script>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 <script>
@@ -24,13 +24,13 @@ function Manage(){
     fetch('/profile',{headers:{'Authorization':'Bearer '+token}})
       .then(r=>r.json()).then(d=>setEnabled(d.passkeys&&d.passkeys.length>0)).catch(()=>{});
   },[]);
-  const startEnable=()=>{sessionStorage.setItem('pkAction','enable');window.location.href='confirm.html';};
-  const startDisable=()=>{sessionStorage.setItem('pkAction','disable');window.location.href='confirm.html';};
+  const startEnable=()=>{sessionStorage.setItem('pkAction','enable');window.location.href='/passkey/confirm.html';};
+  const startDisable=()=>{sessionStorage.setItem('pkAction','disable');window.location.href='/passkey/confirm.html';};
   return React.createElement('div',{className:'box'},[
     enabled?
       React.createElement('button',{key:0,className:'button secondary',onClick:startDisable},'关闭'):
       React.createElement('button',{key:1,className:'button',onClick:startEnable},'开启'),
-    React.createElement('button',{key:2,className:'button',onClick:()=>window.location.href='../settings/index.html'},'返回')
+    React.createElement('button',{key:2,className:'button',onClick:()=>window.location.href='/settings/index.html'},'返回')
   ]);
 }
 ReactDOM.render(React.createElement(Manage),document.getElementById('root'));

@@ -14,7 +14,7 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="../utils/fingerprint.js"></script>
+<script src="/utils/fingerprint.js"></script>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 <script>
@@ -34,14 +34,14 @@ function Verify(){
     const token=sessionStorage.getItem('tfa');
     const res=await fetch('/totp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,code})});
     const data=await res.json();
-    if(res.ok){localStorage.setItem('token',data.token);window.location.href='../manage/index.html';}else{window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Verify failed');}
+    if(res.ok){localStorage.setItem('token',data.token);window.location.href='/manage/index.html';}else{window.location.href='/failure/index.html?msg='+encodeURIComponent(data.error||'Verify failed');}
   };
-  const cancel=()=>{window.location.href='../index/index.html';};
+  const cancel=()=>{window.location.href='/index/index.html';};
   return React.createElement('div',{className:'box'},[
     React.createElement('input',{key:0,placeholder:'TOTP',value:code,onChange:e=>setCode(e.target.value)}),
-    hasPasskey && React.createElement('div',{key:1,className:'gray',onClick:()=>window.location.href='../passkey/verify.html'},'Use passkey?'),
+    hasPasskey && React.createElement('div',{key:1,className:'gray',onClick:()=>window.location.href='/passkey/verify.html'},'Use passkey?'),
     React.createElement('div',{key:2,className:'gray',onClick:()=>setUseBackup(!useBackup)},'无法访问？使用备份代码。'),
-    React.createElement('div',{key:5,className:'gray',onClick:()=>window.location.href='../recover/index.html'},'丢失凭据？'),
+    React.createElement('div',{key:5,className:'gray',onClick:()=>window.location.href='/recover/index.html'},'丢失凭据？'),
     React.createElement('button',{key:3,className:'button',onClick:submit},'提交'),
     React.createElement('button',{key:4,className:'button',onClick:cancel},'取消')
   ]);

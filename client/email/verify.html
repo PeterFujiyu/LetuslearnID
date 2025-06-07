@@ -13,7 +13,7 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="../utils/fingerprint.js"></script>
+<script src="/utils/fingerprint.js"></script>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 <script>
@@ -21,16 +21,16 @@ function EmailVerify(){
   const [code,setCode]=React.useState('');
   const [locale,setLocale]=React.useState(localStorage.getItem('locale')||'en_us');
   const [t,setT]=React.useState({});
-  React.useEffect(()=>{localStorage.setItem('locale',locale);fetch(`../../i18n/${locale}.json`).then(r=>r.json()).then(d=>{setT(d);document.title='Email Verify';}).catch(()=>setT({}));},[locale]);
+  React.useEffect(()=>{localStorage.setItem('locale',locale);fetch(`/i18n/${locale}.json`).then(r=>r.json()).then(d=>{setT(d);document.title='Email Verify';}).catch(()=>setT({}));},[locale]);
   const submit=async()=>{
     const token=localStorage.getItem('token');
     const id=sessionStorage.getItem('email_change_id');
     const r=await fetch('/change-email/verify',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({id,code})});
     const d=await r.json();
-    if(r.ok){window.location.href='../success/index.html?msg='+encodeURIComponent(t.success)+'&next=../settings/index.html';}
-    else{window.location.href='../failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
+    if(r.ok){window.location.href='/success/index.html?msg='+encodeURIComponent(t.success)+'&next=/settings/index.html';}
+    else{window.location.href='/failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
   };
-  const cancel=()=>{window.location.href='../settings/index.html';};
+  const cancel=()=>{window.location.href='/settings/index.html';};
   return React.createElement('div',{className:'box'},[
     React.createElement('select',{key:0,value:locale,onChange:e=>setLocale(e.target.value)},[
       React.createElement('option',{value:'en_us',key:0},'English'),

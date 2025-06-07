@@ -26,7 +26,7 @@
 </head>
 <body>
   <div id="root"></div>
-  <script src="../utils/fingerprint.js"></script>
+  <script src="/utils/fingerprint.js"></script>
   <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
   <script>
@@ -63,7 +63,7 @@
 
       React.useEffect(() => {
         localStorage.setItem('locale', locale);
-        fetch(`../../i18n/${locale}.json`)
+        fetch(`/i18n/${locale}.json`)
           .then(res => res.json())
           .then(data => { setT(data); document.title = data.settings_title || 'Settings'; })
           .catch(() => setT({}));
@@ -79,7 +79,7 @@
           });
           
         } catch (e) { }
-        window.location.href = '../success/index.html?msg=' + encodeURIComponent('Saved settings') + '&next=../settings/index.html';
+        window.location.href = '/success/index.html?msg=' + encodeURIComponent('Saved settings') + '&next=/settings/index.html';
       };
 
       const handleChangeEmail = async () => {
@@ -92,19 +92,19 @@
           });
           const d = await r.json();
           if (!r.ok) {
-            window.location.href = '../failure/index.html?msg=' + encodeURIComponent(d.error || 'Failed');
+            window.location.href = '/failure/index.html?msg=' + encodeURIComponent(d.error || 'Failed');
             return;
           }
           sessionStorage.setItem('email_change_id', d.id);
-          window.location.href = '../email/verify.html';
+          window.location.href = '/email/verify.html';
         } catch (e) {
-          window.location.href = '../failure/index.html?msg=Email';
+          window.location.href = '/failure/index.html?msg=Email';
         }
       };
 
       const handleChangePassword = async () => {
         if (newPassword !== confirmPassword) {
-          window.location.href = '../failure/index.html?msg=' + encodeURIComponent('Passwords do not match');
+          window.location.href = '/failure/index.html?msg=' + encodeURIComponent('Passwords do not match');
           return;
         }
         const token = localStorage.getItem('token');
@@ -116,18 +116,18 @@
           });
           const data = await res.json();
           if (res.ok) {
-            window.location.href = '../success/index.html?type=login';
+            window.location.href = '/success/index.html?type=login';
           } else {
-            window.location.href = '../failure/index.html?msg=' + encodeURIComponent(data.error || 'Change failed');
+            window.location.href = '/failure/index.html?msg=' + encodeURIComponent(data.error || 'Change failed');
           }
         } catch (err) {
-          window.location.href = '../failure/index.html?msg=Change%20error';
+          window.location.href = '/failure/index.html?msg=Change%20error';
         }
       };
 
       const handleBackupCodes = () => {
         sessionStorage.setItem('totpAction','regenerate');
-        window.location.href = '../totp/confirm.html';
+        window.location.href = '/totp/confirm.html';
       };
 
       const handleLogout = async () => {
@@ -140,7 +140,7 @@
           });
         } catch (e) { }
         localStorage.removeItem('token');
-        window.location.href = '../index/index.html';
+        window.location.href = '/index/index.html';
       };
 
       return (
@@ -150,7 +150,7 @@
           ),
           menuOpen && React.createElement('div', { className:'menu' },
             React.createElement('a', { href:'#', onClick:handleLogout }, t.logout),
-            React.createElement('a', { href:'../manage/index.html' }, t.manage_page),
+            React.createElement('a', { href:'/manage/index.html' }, t.manage_page),
             bookmarks.map((b,i) => React.createElement('a', { key:i, href:b.url }, b.title))
           ),
           React.createElement('div', { className:'container' },
@@ -176,8 +176,8 @@
             React.createElement('i', { className:'fa-solid ' + (showConfirm?'fa-eye-slash':'fa-eye'), onClick:()=>setShowConfirm(!showConfirm), style:{position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', cursor:'pointer'} })
           ),
           React.createElement('button', { className:'button', onClick:handleChangePassword }, t.change_password),
-          React.createElement('button', { className:'button', onClick:()=>window.location.href='../totp/manage.html' }, t.manage_totp),
-          React.createElement('button', { className:'button', onClick:()=>window.location.href='../passkey/manage.html' }, t.passkeys),
+          React.createElement('button', { className:'button', onClick:()=>window.location.href='/totp/manage.html' }, t.manage_totp),
+          React.createElement('button', { className:'button', onClick:()=>window.location.href='/passkey/manage.html' }, t.passkeys),
           React.createElement('input', { type:'number', min:2, max:13, value:sessionDays, onChange:e=>setSessionDays(e.target.value), placeholder:t.remember_days }),
           React.createElement('button', { className:'button secondary', onClick:handleBackupCodes },
             React.createElement('i', { className:'fa-solid fa-shield-halved icon-white' }), t.backup_codes

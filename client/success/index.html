@@ -68,7 +68,7 @@
 
       React.useEffect(() => {
         localStorage.setItem('locale', locale);
-        fetch(`../../i18n/${locale}.json`)
+        fetch(`/i18n/${locale}.json`)
           .then(res => res.json())
           .then(data => {
             setT(data);
@@ -88,7 +88,8 @@
         document.title = msg || t.success; // 这里也加 t.success 兜底
       }, [t]);
 
-      const next = nextParam || (type === 'register' ? '../index/index.html' : '../manage/index.html');
+      const abs = p => p && !p.startsWith('/') ? '/' + p : p;
+      const next = abs(nextParam) || (type === 'register' ? '/index/index.html' : '/manage/index.html');
 
       return (
         React.createElement('div', { className: 'box' },

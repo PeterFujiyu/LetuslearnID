@@ -22,14 +22,14 @@ function Verify(){
   const [t,setT]=React.useState({});
   React.useEffect(()=>{
     localStorage.setItem('locale',locale);
-    fetch(`../../i18n/${locale}.json`).then(r=>r.json()).then(d=>{setT(d);document.title=d.register||'Verify';}).catch(()=>setT({}));
+    fetch(`/i18n/${locale}.json`).then(r=>r.json()).then(d=>{setT(d);document.title=d.register||'Verify';}).catch(()=>setT({}));
   },[locale]);
   const submit=async()=>{
     const id=sessionStorage.getItem('reg_id');
     const res=await fetch('/register/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,code})});
     const d=await res.json();
-    if(res.ok){window.location.href='../success/index.html?type=register';}
-    else{window.location.href='../failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
+    if(res.ok){window.location.href='/success/index.html?type=register';}
+    else{window.location.href='/failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
   };
   return React.createElement('div',{className:'box'},[
     React.createElement('select',{key:0,value:locale,onChange:e=>setLocale(e.target.value)},[

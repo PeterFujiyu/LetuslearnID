@@ -14,7 +14,7 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="../utils/fingerprint.js"></script>
+<script src="/utils/fingerprint.js"></script>
 <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 <script>
@@ -41,9 +41,9 @@ function Confirm(){
       if(res.ok){
         sessionStorage.setItem('totpCodes',JSON.stringify(data.codes));
         if(!usePk) sessionStorage.setItem('totpCode',code); else sessionStorage.setItem('usePasskey','1');
-        window.location.href='backup.html';
+        window.location.href='/totp/backup.html';
       }else{
-        window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
+        window.location.href='/failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
       }
       return;
     }
@@ -53,12 +53,12 @@ function Confirm(){
       if(action==='update'){
         sessionStorage.setItem('totpSetup',JSON.stringify(data));
         sessionStorage.setItem('totpAction','verify');
-        window.location.href='setup.html';
+        window.location.href='/totp/setup.html';
       }else{
-        window.location.href='../success/index.html?msg=Success&next=../settings/index.html';
+        window.location.href='/success/index.html?msg=Success&next=/settings/index.html';
       }
     }else{
-      window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
+      window.location.href='/failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
     }
   };
   const verifyPasskey=async()=>{
@@ -66,7 +66,7 @@ function Confirm(){
       const fp=getFingerprint();
       const t=localStorage.getItem('token');
       const opt=await fetch('/passkey/auth-options',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({fingerprint:fp})});
-      if(!opt.ok){window.location.href='../failure/index.html?msg=No%20passkey';return;}
+      if(!opt.ok){window.location.href='/failure/index.html?msg=No%20passkey';return;}
       const opts=await opt.json();
       const b64ToBuf=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
       const bufToB64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -76,15 +76,15 @@ function Confirm(){
       const body={id:cred.id,rawId:bufToB64(cred.rawId),response:{authenticatorData:bufToB64(cred.response.authenticatorData),clientDataJSON:bufToB64(cred.response.clientDataJSON),signature:bufToB64(cred.response.signature),userHandle:cred.response.userHandle?bufToB64(cred.response.userHandle):null},type:cred.type};
       const vr=await fetch('/passkey/auth?fingerprint='+encodeURIComponent(fp),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       const d=await vr.json();
-      if(vr.ok&&d.token){localStorage.setItem('token',d.token);submit(true);}else{window.location.href='../failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
-    }catch(e){window.location.href='../failure/index.html?msg=Passkey';}
+      if(vr.ok&&d.token){localStorage.setItem('token',d.token);submit(true);}else{window.location.href='/failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
+    }catch(e){window.location.href='/failure/index.html?msg=Passkey';}
   };
   const cancel=()=>{
     if(action==='verify'){
       fetch('/totp/cancel',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
-        .finally(()=>{window.location.href='../settings/index.html';});
+        .finally(()=>{window.location.href='/settings/index.html';});
     }else{
-      window.location.href='../settings/index.html';
+      window.location.href='/settings/index.html';
     }
   };
   return React.createElement('div',{className:'box'},[
