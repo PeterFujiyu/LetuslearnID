@@ -7,6 +7,7 @@
     body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;height:100vh;animation:fadeIn .3s ease;}
     .box{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);text-align:center;width:360px;}
     input{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:4px;}
+    .gray{color:#666;font-size:0.9em;cursor:pointer;margin-bottom:10px;}
     .button{width:100%;padding:10px;background:#000;color:#fff;border:none;border-radius:20px;cursor:pointer;margin-top:10px;}
     @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
   </style>
@@ -19,14 +20,23 @@
 <script>
 function Confirm(){
   const [code,setCode]=React.useState('');
+  const [hasPasskey,setHasPasskey]=React.useState(false);
   const action=sessionStorage.getItem('totpAction');
-  const submit=async()=>{
+  React.useEffect(()=>{
+    const token=localStorage.getItem('token');
+    fetch('/profile',{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{if(d&&d.passkeys&&d.passkeys.length)setHasPasskey(true);})
+      .catch(()=>{});
+  },[]);
+  const submit=async(usePk)=>{
     const token=localStorage.getItem('token');
     let url='/totp/check';
     if(action==='disable') url='/totp/disable';
     if(action==='update') url='/totp/update';
     if(action==='regenerate') url='/totp/regenerate';
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({code})});
+    const body=usePk?{}:{code};
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
     const data=await res.json();
     if(res.ok){
       if(action==='update'){
@@ -43,6 +53,24 @@ function Confirm(){
       window.location.href='../failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
     }
   };
+  const verifyPasskey=async()=>{
+    try{
+      const fp=getFingerprint();
+      const t=localStorage.getItem('token');
+      const opt=await fetch('/passkey/auth-options',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},body:JSON.stringify({fingerprint:fp})});
+      if(!opt.ok){window.location.href='../failure/index.html?msg=No%20passkey';return;}
+      const opts=await opt.json();
+      const b64ToBuf=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+      const bufToB64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      opts.challenge=b64ToBuf(opts.challenge);
+      opts.allowCredentials=opts.allowCredentials.map(c=>({...c,id:b64ToBuf(c.id)}));
+      const cred=await navigator.credentials.get({publicKey:opts});
+      const body={id:cred.id,rawId:bufToB64(cred.rawId),response:{authenticatorData:bufToB64(cred.response.authenticatorData),clientDataJSON:bufToB64(cred.response.clientDataJSON),signature:bufToB64(cred.response.signature),userHandle:cred.response.userHandle?bufToB64(cred.response.userHandle):null},type:cred.type};
+      const vr=await fetch('/passkey/auth?fingerprint='+encodeURIComponent(fp),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const d=await vr.json();
+      if(vr.ok&&d.token){localStorage.setItem('token',d.token);submit(true);}else{window.location.href='../failure/index.html?msg='+encodeURIComponent(d.error||'Failed');}
+    }catch(e){window.location.href='../failure/index.html?msg=Passkey';}
+  };
   const cancel=()=>{
     if(action==='verify'){
       fetch('/totp/cancel',{method:'POST',headers:{'Authorization':'Bearer '+localStorage.getItem('token')}})
@@ -53,8 +81,9 @@ function Confirm(){
   };
   return React.createElement('div',{className:'box'},[
     React.createElement('input',{key:0,placeholder:'TOTP',value:code,onChange:e=>setCode(e.target.value)}),
-    React.createElement('button',{key:1,className:'button',onClick:submit},'提交'),
-    React.createElement('button',{key:2,className:'button',onClick:cancel},'取消')
+    hasPasskey && React.createElement('div',{key:1,className:'gray',onClick:verifyPasskey},'Use passkey?'),
+    React.createElement('button',{key:2,className:'button',onClick:()=>submit(false)},'提交'),
+    React.createElement('button',{key:3,className:'button',onClick:cancel},'取消')
   ]);
 }
 ReactDOM.render(React.createElement(Confirm),document.getElementById('root'));
