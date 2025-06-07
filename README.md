@@ -97,6 +97,9 @@ npm run e2e
 ```
 
 当字段缺失时会返回 400 状态码并记录错误信息，而不再输出完整的堆栈日志。
+若 WebAuthn 验证未通过也会返回相同的 400 状态码，不会再出现 "toString" 相关异常。
+由于注册选项采用 `userVerification: 'preferred'`，后端验证阶段已关闭强制 `requireUserVerification`，
+从而兼容未提供用户验证信息的设备。
 
 ## 未来工作
 
