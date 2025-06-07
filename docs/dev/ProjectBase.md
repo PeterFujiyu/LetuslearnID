@@ -35,3 +35,92 @@
 5. 配置 Cloudreve，使其通过该统一认证机制完成登录验证。
 6. 提供账户设置页，可在其中修改登录密码。
 7. 界面语言切换后保持全站一致，设置页右上角显示当前用户名称，并提供管理、登出及书签快捷入口。
+
+## 目录结构
+
+- `server/` — REST API 代码以及 Mocha 测试
+- `client/` — React 引擎的登录和账户设置页
+- `i18n/` — 翻译文件（已包含中英文版本）
+- `docs/` — 开发设计文档
+
+## 安装
+
+```bash
+cd server && npm install
+```
+首次安装会通过 Playwright 下载 Chromium 浏览器文件，仅占用较小空间，如需其他浏览器可手动执行 `npx playwright install`。
+
+## 启动服务
+
+可以通过以下环境变量来调整服务器行为：
+
+- `JWT_SECRET` — JWT 签名密钥（默认 `dev-secret`）
+- `PORT` — HTTP 服务端口（默认 `3000`）
+- `DB_FILE` — SQLite 数据库文件路径（默认 `./server/users.db`）
+
+在 `server` 目录下启动服务：
+
+```bash
+npm start
+```
+
+## 测试
+
+运行单元和端到端测试：
+
+```bash
+npm test    # 包含单元以及 e2e 测试
+```
+若系统缺少 Playwright 运行所需的库，可参照终端提示安装。
+
+仅运行单元测试：
+
+```bash
+npm run unit
+```
+
+如果只需运行 e2e 测试：
+
+```bash
+npm run e2e
+```
+
+新增 `passkey.test.js` 用于覆盖通行密钥相关接口，运行 `npm test` 会一并执行。
+
+## API 说明
+
+### `POST /logout`
+
+请求体需包含浏览器指纹 `fingerprint`，并在 `Authorization` 头中携带登录 token。服务器会删除该指纹的会话并将 token 标记为失效，成功时返回：
+
+```json
+{ "message": "logged out" }
+```
+
+### `GET /profile`
+
+返回当前登录用户的基础信息，包含已注册的通行密钥：
+
+```json
+{
+  "id": 1,
+  "username": "alice",
+  "totp": false,
+  "passkeys": []
+}
+```
+
+### `POST /passkey/register`
+
+验证并绑定用户的通行密钥。请求体需包含 WebAuthn 返回的 `id`、`rawId`、`response` 及 `type` 字段。
+若字段缺失或验证失败，服务器将返回：
+
+```json
+{ "error": "Verification failed" }
+```
+
+当字段缺失时会返回 400 状态码并记录错误信息，而不再输出完整的堆栈日志。若 WebAuthn 验证未通过也会返回相同的 400 状态码，不会再出现 "toString" 相关异常。由于注册选项采用 `userVerification: 'preferred'`，后端验证阶段已关闭强制 `requireUserVerification`，从而兼容未提供用户验证信息的设备。
+
+## 未来工作
+
+为了更好的拥有扩展性，项目计划在资源允许时将数据库从 SQLite 迁移到 PostgreSQL，此部分由于资源限制暂列为技术债。
