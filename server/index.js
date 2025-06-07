@@ -435,9 +435,14 @@ app.post('/passkey/register', authenticateToken, async (req, res) => {
       response: req.body,
       expectedChallenge,
       expectedOrigin: `http://${req.headers.host}`,
-      expectedRPID: req.headers.host.split(':')[0]
+      expectedRPID: req.headers.host.split(':')[0],
+      requireUserVerification: false
     });
-    const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+    if (!verification.verified || !verification.registrationInfo) {
+      throw new Error('Verification failed');
+    }
+    const { credentialID, credentialPublicKey, counter } =
+      verification.registrationInfo;
     await addPasskey(
       req.user.id,
       credentialID.toString('base64url'),
@@ -490,6 +495,7 @@ app.post('/passkey/auth', async (req, res) => {
       expectedChallenge: data.challenge,
       expectedOrigin: `http://${req.headers.host}`,
       expectedRPID: req.headers.host.split(':')[0],
+      requireUserVerification: false,
       authenticator: {
         credentialID: Buffer.from(key.credential_id, 'base64url'),
         credentialPublicKey: Buffer.from(key.public_key, 'base64'),
