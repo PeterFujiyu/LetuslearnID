@@ -2,7 +2,7 @@ const { sendCode } = require('./email');
 const assert = require('assert');
 
 describe('邮件发送功能', function() {
-  this.timeout(30000); // 邮件发送可能较慢，设为10秒
+  this.timeout(10000); // 邮件发送可能较慢，设为10秒
   const code = process.env.TEST_CODE || 'test';
   const email = process.env.TEST_EMAIL;
   it('应该成功发送邮件', async function() {
