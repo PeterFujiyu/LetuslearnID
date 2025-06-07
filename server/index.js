@@ -441,13 +441,12 @@ app.post('/passkey/register', authenticateToken, async (req, res) => {
     if (!verification.verified || !verification.registrationInfo) {
       throw new Error('Verification failed');
     }
-    const { credentialID, credentialPublicKey, counter } =
-      verification.registrationInfo;
+    const { credential } = verification.registrationInfo;
     await addPasskey(
       req.user.id,
-      credentialID.toString('base64url'),
-      credentialPublicKey.toString('base64'),
-      counter
+      credential.id,
+      Buffer.from(credential.publicKey).toString('base64'),
+      credential.counter
     );
     delete challenges[req.user.username];
     res.json({ message: 'registered' });
