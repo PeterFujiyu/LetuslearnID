@@ -16,6 +16,7 @@ LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](ht
 ```bash
 cd server && npm install
 ```
+首次安装会通过 Playwright 下载 Chromium 浏览器文件，仅占用较小空间，如需其他浏览器可手动执行 `npx playwright install`。
 
 ## 启动服务
 
@@ -45,6 +46,7 @@ npm start
 ```bash
 npm test    # 包含单元以及 e2e 测试
 ```
+若系统缺少 Playwright 运行所需的库，可参照终端提示安装。
 
 仅运行单元测试：
 
