@@ -38,4 +38,15 @@
   "manage_totp": "Manage Two-Factor",
   "code": "Code",
   "reset_via_code": "Reset Password via Code"
+  ,"admin_title": "Admin"
+  ,"users": "Users"
+  ,"groups": "Groups"
+  ,"sql_cli": "SQL CLI"
+  ,"id": "ID"
+  ,"name": "Name"
+  ,"operations": "Op"
+  ,"save_changes": "Save Changes"
+  ,"cancel": "Cancel"
+  ,"add": "Add"
+  ,"execute": "Execute"
 }

@@ -37,5 +37,16 @@
   "edit": "修改",
   "manage_totp": "管理两步验证",
   "code": "验证码",
-  "reset_via_code": "通过验证码重置密码"
+  "reset_via_code": "通过验证码重置密码",
+  "admin_title": "后台管理",
+  "users": "用户列表",
+  "groups": "用户组",
+  "sql_cli": "SQL 命令行",
+  "id": "ID",
+  "name": "名称",
+  "operations": "操作",
+  "save_changes": "保存更改",
+  "cancel": "取消",
+  "add": "新增",
+  "execute": "执行"
 }
