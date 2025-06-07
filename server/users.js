@@ -111,7 +111,7 @@ module.exports = function setupUserRoutes(app, db) {
 
   const createVerifyCode = async (uid, ip, code) => {
     const q = 'INSERT INTO verifycode (user_id, ip, code, expires_at) VALUES (?,?,?,?)';
-    return promisify(db.run.bind(db))(q, uid, ip, code, Date.now() + 600000);
+    return runStmt(q, [uid, ip, code, Date.now() + 600000]);
   };
 
   const markVerifyCode = async (id) => {
