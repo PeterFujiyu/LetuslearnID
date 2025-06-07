@@ -123,8 +123,8 @@
               React.createElement('td',null,React.createElement('input',{placeholder:'parent',id:'gp'})),
               React.createElement('td',null,React.createElement('input',{placeholder:'perm',id:'gperm'})),
               React.createElement('td',null,React.createElement('button',{className:'button',onClick:()=>saveGroup({name:document.getElementById('gn').value,parent_id:document.getElementById('gp').value||null,permissions:document.getElementById('gperm').value})},t.add||'Add'))
-            ]))
-          ]))
+            ])
+          ])
         ]),
         React.createElement('h2',{key:'sqlh'},t.sql_cli||'SQL CLI'),
         React.createElement('textarea',{key:'sqla',style:{width:'100%',height:'80px'},value:sql,onChange:e=>setSql(e.target.value)}),
