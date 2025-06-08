@@ -1,5 +1,7 @@
 import { promisify } from 'util';
 import crypto from 'crypto';
+import readline from 'readline/promises';
+import { stdin as input, stdout as output } from 'process';
 
 async function initOidcConfig(db, verbose = false) {
   const run = promisify(db.run.bind(db));
@@ -17,14 +19,18 @@ async function initOidcConfig(db, verbose = false) {
   )`);
   const row = await get('SELECT * FROM oidcauth LIMIT 1');
   if (!row) {
+    const rl = readline.createInterface({ input, output });
+    const domain = (await rl.question('请输入 LetuslearnID 部署域名（不含https://和末尾的/）: ')).trim();
+    rl.close();
+
     const cfg = {
       client_id: crypto.randomUUID(),
       client_secret: crypto.randomBytes(16).toString('hex'),
       username_key: 'sub',
       org_name: 'Letuslearn',
       app_name: 'LetuslearnID',
-      endpoint: 'https://sso.example.com',
-      jwt_key: 'PUBLICKEY',
+      endpoint: `https://${domain}`,
+      jwt_key: crypto.randomBytes(32).toString('hex'),
       extra_scope: 'profile email'
     };
     console.log('OIDC 配置初次生成:', cfg);
