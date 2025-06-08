@@ -10,3 +10,4 @@ server/users.db
 .env
 
 server/emailconfig.json
+server/dist/
