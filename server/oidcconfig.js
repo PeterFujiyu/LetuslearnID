@@ -1,5 +1,5 @@
-const { promisify } = require('util');
-const crypto = require('crypto');
+import { promisify } from 'util';
+import crypto from 'crypto';
 
 async function initOidcConfig(db, verbose = false) {
   const run = promisify(db.run.bind(db));
@@ -27,14 +27,14 @@ async function initOidcConfig(db, verbose = false) {
       jwt_key: 'PUBLICKEY',
       extra_scope: 'profile email'
     };
-    console.log('OIDC \u914d\u7f6e\u521d\u6b21\u751f\u6210:', cfg);
+    console.log('OIDC 配置初次生成:', cfg);
     await run('INSERT INTO oidcauth (client_id,client_secret,username_key,org_name,app_name,endpoint,jwt_key,extra_scope) VALUES (?,?,?,?,?,?,?,?)',
       Object.values(cfg));
     return cfg;
   } else {
-    if (verbose) console.log('OIDC \u914d\u7f6e:', row);
+    if (verbose) console.log('OIDC 配置:', row);
     return row;
   }
 }
 
-module.exports = initOidcConfig;
+export default initOidcConfig;
