@@ -11,9 +11,20 @@ LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](ht
 ## 安装
 
 ```bash
+# Install node 20 on Ubuntu
+sudo apt update && sudo apt upgrade
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+# choose one
+source ~/.bashrc  # For bash
+source ~/.zshrc   # For zsh
+# install datebase
+sudo apt install sqlite3
+# install lib
+sudo apt install libnss3
+# install this project
 cd server && npm install
 cp emailconfig.example.json emailconfig.json
-vim emailconfig.json # 配置SMTP服务
+vim emailconfig.json # SMTP
 ```
 首次安装会通过 Playwright 下载 Chromium 浏览器文件，仅占用较小空间，如需其他浏览器可手动执行 `npx playwright install`。
 
