@@ -95,13 +95,5 @@ TEST_CODE=123654 TEST_EMAIL=user@example.com npx mocha testemailsmtp.js
 若邮件成功送达则表示配置正确。
 
 
-## OIDC 前端示例
-
-后端在 `server/oidc.ts` 提供了基于 oidc-provider 的认证服务，可单独在 `server` 目录启动：
-
-```bash
-node oidc.ts
-```
-
 启动后访问 `http://localhost:3000/oidc/index.html`，点击按钮即可跳转到 OIDC 授权页并在回调页显示令牌结果。默认示例客户端使用 `cloudreve` 账户，密钥来自 `CLOUDREVE_SECRET` 环境变量。
 
