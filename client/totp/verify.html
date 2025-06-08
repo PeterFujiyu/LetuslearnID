@@ -34,7 +34,7 @@ function Verify(){
     const token=sessionStorage.getItem('tfa');
     const res=await fetch('/totp/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,code})});
     const data=await res.json();
-    if(res.ok){localStorage.setItem('token',data.token);window.location.href='/manage/index.html';}else{window.location.href='/failure/index.html?msg='+encodeURIComponent(data.error||'Verify failed');}
+    if(res.ok){localStorage.setItem('token',data.token);if(data.sso) window.open('/oidc/index.html?token='+encodeURIComponent(data.sso),'_blank');window.location.href='/manage/index.html';}else{window.location.href='/failure/index.html?msg='+encodeURIComponent(data.error||'Verify failed');}
   };
   const cancel=()=>{window.location.href='/index/index.html';};
   return React.createElement('div',{className:'box'},[

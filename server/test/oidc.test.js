@@ -1,0 +1,29 @@
+process.env.DB_FILE=':memory:';
+const request = require('supertest');
+const assert = require('assert');
+const { app, initDb, db, initOidcConfig } = require('../index');
+const { promisify } = require('util');
+const get = promisify(db.get.bind(db));
+
+describe('OIDC config and login', () => {
+  before(async () => {
+    await initDb();
+    await initOidcConfig(db, true);
+  });
+
+  it('creates oidcauth row', async () => {
+    const row = await get('SELECT client_id FROM oidcauth');
+    assert.ok(row);
+  });
+
+  it('returns sso token on login', async () => {
+    const reg = await request(app).post('/register').send({ username:'oidc', email:'o@e.c', password:'pw' });
+    const row = await get('SELECT id, code FROM pending_codes WHERE id=?', reg.body.id);
+    await request(app).post('/register/verify').send({ id: reg.body.id, code: row.code });
+    const res = await request(app).post('/login').send({ username:'oidc', password:'pw' });
+    assert.strictEqual(res.status, 200);
+    assert.ok(res.body.sso);
+  });
+
+  after(done => db.close(done));
+});

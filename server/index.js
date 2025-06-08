@@ -2,6 +2,7 @@ const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const { promisify } = require('util');
+const initOidcConfig = require('./oidcconfig');
 
 const app = express();
 app.use(express.json());
@@ -89,6 +90,12 @@ const initDb = () => {
 const userMod = require('./users')(app, db);
 require('./admin')(app, db, userMod.authenticateToken);
 
+app.post('/sso/login', (req,res) => {
+  const { token } = req.body || {};
+  console.log('SSO login token', token);
+  res.json({ url: '/success/index.html?type=login' });
+});
+
 app.use('/admin', async (req,res,next)=>{
   let token = req.headers.authorization && req.headers.authorization.split(' ')[1];
   if(!token && req.query.t) token = req.query.t;
@@ -102,13 +109,16 @@ app.use('/admin', async (req,res,next)=>{
   }
 });
 
-initDb().then(() => {
-  if (require.main === module) {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  }
-}).catch((err) => {
-  console.error('Failed to initialize database', err);
-});
+initDb()
+  .then(() => initOidcConfig(db))
+  .then(() => {
+    if (require.main === module) {
+      const PORT = process.env.PORT || 3000;
+      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    }
+  })
+  .catch((err) => {
+    console.error('Failed to initialize database', err);
+  });
 
-module.exports = { app, initDb, db };
+module.exports = { app, initDb, initOidcConfig, db };
