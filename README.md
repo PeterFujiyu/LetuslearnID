@@ -17,6 +17,8 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
 # choose one
 source ~/.bashrc  # For bash
 source ~/.zshrc   # For zsh
+nvm install 20
+nvm use 20
 # install datebase
 sudo apt install sqlite3
 # install lib
