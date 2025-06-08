@@ -1,5 +1,5 @@
-const { sendCode } = require('./email');
-const assert = require('assert');
+import { sendCode } from './email.js';
+import assert from 'assert';
 
 describe('邮件发送功能', function() {
   this.timeout(10000); // 邮件发送可能较慢，设为10秒

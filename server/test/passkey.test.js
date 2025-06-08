@@ -1,8 +1,8 @@
 process.env.DB_FILE = ':memory:';
-const request = require('supertest');
-const assert = require('assert');
-const { promisify } = require('util');
-const { app, initDb, db } = require('../index');
+import request from 'supertest';
+import assert from 'assert';
+import { promisify } from 'util';
+import { app, initDb, db } from '../index.js';
 
 const run = promisify(db.run.bind(db));
 const get = promisify(db.get.bind(db));

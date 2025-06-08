@@ -1,9 +1,9 @@
 // server/test/e2e.test.js
-const { chromium } = require('playwright');
-const assert = require('assert');
+import { chromium } from 'playwright';
+import assert from 'assert';
 process.env.DB_FILE = ':memory:';
-const { app, initDb, db } = require('../index');  // 确保 index.js 导出了 app、initDb
-const { promisify } = require('util');
+import { app, initDb, db } from '../index.js';  // 确保 index.js 导出了 app、initDb
+import { promisify } from 'util';
 const get = promisify(db.get.bind(db));
 
 let server, browser, page;

@@ -1,8 +1,12 @@
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const { promisify } = require('util');
-const initOidcConfig = require('./oidcconfig');
+import express from 'express';
+import sqlite3pkg from 'sqlite3';
+import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
+import { promisify } from 'util';
+import initOidcConfig from './oidcconfig.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());
@@ -14,6 +18,7 @@ app.get('/', (req, res) => {
 });
 
 const dbFile = process.env.DB_FILE || path.join(__dirname, 'users.db');
+const sqlite3 = sqlite3pkg.verbose();
 const db = new sqlite3.Database(dbFile);
 
 // Initialize user table if it doesn't exist
@@ -87,8 +92,10 @@ const initDb = () => {
   });
 };
 
-const userMod = require('./users')(app, db);
-require('./admin')(app, db, userMod.authenticateToken);
+import userRoutes from './users.js';
+import adminRoutes from './admin.js';
+const userMod = userRoutes(app, db);
+adminRoutes(app, db, userMod.authenticateToken);
 
 app.post('/sso/login', (req,res) => {
   const { token } = req.body || {};
@@ -112,7 +119,7 @@ app.use('/admin', async (req,res,next)=>{
 initDb()
   .then(() => initOidcConfig(db))
   .then(() => {
-    if (require.main === module) {
+    if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
       const PORT = process.env.PORT || 3000;
       app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     }
@@ -121,4 +128,4 @@ initDb()
     console.error('Failed to initialize database', err);
   });
 
-module.exports = { app, initDb, initOidcConfig, db };
+export { app, initDb, initOidcConfig, db };

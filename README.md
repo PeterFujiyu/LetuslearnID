@@ -8,6 +8,8 @@ LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](ht
 
 服务启动后可访问 [http://localhost:3000/](http://localhost:3000/) 以打开登录页。
 
+后端代码现已完全采用 ES Module 编写，如需在脚本中引用请使用 `import` 语法。
+
 ## 安装
 
 ```bash

@@ -1,5 +1,5 @@
-const nodemailer = require('nodemailer');
-const config = require('./emailconfig.json');
+import nodemailer from 'nodemailer';
+import config from './emailconfig.json' assert { type: 'json' };
 
 const transporter = nodemailer.createTransport(config.smtp);
 
@@ -23,4 +23,4 @@ async function sendCode(to, code, ip, subject = config.subject) {
   }
 }
 
-module.exports = { sendCode };
+export { sendCode };

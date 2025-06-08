@@ -1,8 +1,8 @@
 process.env.DB_FILE=':memory:';
-const request = require('supertest');
-const assert = require('assert');
-const { app, initDb, db, initOidcConfig } = require('../index');
-const { promisify } = require('util');
+import request from 'supertest';
+import assert from 'assert';
+import { promisify } from 'util';
+import { app, initDb, db, initOidcConfig } from '../index.js';
 const get = promisify(db.get.bind(db));
 
 describe('OIDC config and login', () => {

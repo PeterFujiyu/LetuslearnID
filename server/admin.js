@@ -1,6 +1,7 @@
-const { promisify } = require('util');
+import { promisify } from 'util';
+import bcrypt from 'bcryptjs';
 
-module.exports = function(app, db, auth){
+export default function adminRoutes(app, db, auth){
   const isAdmin = async id => {
     const row = await promisify(db.get.bind(db))(
       'SELECT 1 FROM user_groups ug JOIN groups g ON ug.group_id=g.id WHERE ug.user_id=? AND g.name="admin"',
@@ -22,7 +23,7 @@ module.exports = function(app, db, auth){
     const {username,email,password} = req.body;
     if(!username||!password) return res.status(400).json({error:'missing data'});
     try{
-      const hash = require('bcryptjs').hashSync(password,10);
+      const hash = bcrypt.hashSync(password,10);
       const stmt = await promisify(db.run.bind(db))('INSERT INTO users (username,email,password_hash) VALUES (?,?,?)',username,email,hash);
       await promisify(db.run.bind(db))('INSERT INTO user_groups (user_id,group_id) VALUES (?,2)', stmt.lastID);
       res.json({id:stmt.lastID});
@@ -56,7 +57,7 @@ module.exports = function(app, db, auth){
     const uid = req.params.id;
     const {password,totpEnabled,passkeyEnabled,groups=[]} = req.body;
     if(password){
-      const hash = require('bcryptjs').hashSync(password,10);
+      const hash = bcrypt.hashSync(password,10);
       await promisify(db.run.bind(db))('UPDATE users SET password_hash=? WHERE id=?', hash, uid);
     }
     if(totpEnabled===false){
@@ -155,4 +156,4 @@ module.exports = function(app, db, auth){
       res.status(400).json({error:'bad sql'});
     }
   });
-};
+}
