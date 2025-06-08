@@ -1,15 +1,15 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { promisify } = require('util');
-const {
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { promisify } from 'util';
+import {
   generateRegistrationOptions,
   verifyRegistrationResponse,
   generateAuthenticationOptions,
   verifyAuthenticationResponse
-} = require('@simplewebauthn/server');
-const { authenticator } = require('otplib');
-const { sendCode } = require('./email');
-const { loginToSso } = require('./sso');
+} from '@simplewebauthn/server';
+import { authenticator } from 'otplib';
+import { sendCode } from './email.js';
+import { loginToSso } from './sso.js';
 
 function setupUserRoutes(app, db) {
   const challenges = {};
@@ -731,4 +731,4 @@ function setupUserRoutes(app, db) {
   return { authenticateToken, verifyToken };
 }
 
-module.exports = setupUserRoutes;
+export default setupUserRoutes;

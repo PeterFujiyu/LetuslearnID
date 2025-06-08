@@ -1,5 +1,5 @@
-const { promisify } = require('util');
-const jwt = require('jsonwebtoken');
+import { promisify } from 'util';
+import jwt from 'jsonwebtoken';
 
 async function loginToSso(db, username) {
   const get = promisify(db.get.bind(db));
@@ -12,4 +12,4 @@ async function loginToSso(db, username) {
   return jwt.sign(payload, cfg.client_secret, { expiresIn: '1h' });
 }
 
-module.exports = { loginToSso };
+export { loginToSso };

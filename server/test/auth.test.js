@@ -1,9 +1,10 @@
 process.env.DB_FILE = ':memory:';
-const request = require('supertest');
-const assert = require('assert');
-const jwt = require('jsonwebtoken');
-const { promisify } = require('util');
-const { app, initDb, db } = require('../index');
+import request from 'supertest';
+import assert from 'assert';
+import jwt from 'jsonwebtoken';
+import { promisify } from 'util';
+import { authenticator } from 'otplib';
+import { app, initDb, db } from '../index.js';
 
 before(async () => {
   await initDb();
@@ -93,7 +94,7 @@ describe('POST /change-password', () => {
     const { secret, codes } = r.body;
     global.secret = secret;
     global.codes = codes;
-    const otp = require('otplib').authenticator.generate(secret);
+    const otp = authenticator.generate(secret);
     r = await request(app)
       .post('/login')
       .send({ username: 'alice', password: 'newpass' });
@@ -110,7 +111,7 @@ describe('POST /change-password', () => {
 describe('Session persistence', () => {
   it('saves session settings and performs auto login', async () => {
     let r = await request(app).post('/login').send({ username: 'alice', password: 'newpass' , rememberDays:2 });
-    const otp = require('otplib').authenticator.generate(global.secret);
+    const otp = authenticator.generate(global.secret);
     const vr = await request(app).post('/totp/verify').send({ token: r.body.temp, code: otp });
     const token = vr.body.token;
     const fp = 'testfp';
@@ -128,7 +129,7 @@ describe('Session persistence', () => {
 describe('POST /logout', () => {
   it('deletes session and rejects old token', async () => {
     let r = await request(app).post('/login').send({ username: 'alice', password: 'newpass', rememberDays:2 });
-    const otp = require('otplib').authenticator.generate(global.secret);
+    const otp = authenticator.generate(global.secret);
     const vr = await request(app).post('/totp/verify').send({ token: r.body.temp, code: otp });
     const token = vr.body.token;
     const fp = 'logoutfp';
@@ -169,14 +170,14 @@ describe('TOTP and backup codes', () => {
   });
 
   it('regenerates backup codes with totp code', async () => {
-    const otp = require('otplib').authenticator.generate(global.secret);
+    const otp = authenticator.generate(global.secret);
     const prev = await request(app)
       .post('/totp/regenerate?preview=1')
       .set('Authorization', 'Bearer ' + global.token)
       .send({ code: otp });
     assert.strictEqual(prev.status, 200);
     assert.ok(Array.isArray(prev.body.codes));
-    const otp2 = require('otplib').authenticator.generate(global.secret);
+    const otp2 = authenticator.generate(global.secret);
     const res = await request(app)
       .post('/totp/regenerate')
       .set('Authorization', 'Bearer ' + global.token)
