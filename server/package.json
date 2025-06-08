@@ -9,7 +9,8 @@
     "e2e": "mocha test/e2e.test.js",
     "start": "node index.js",
     "postinstall": "npx playwright install chromium",
-    "sql": "sqlite3 server/users.db .tables"
+    "sql": "sqlite3 server/users.db .tables",
+    "resetoidc": "node resetoidc.js"
   },
   "keywords": [],
   "author": "",

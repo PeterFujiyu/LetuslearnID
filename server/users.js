@@ -9,6 +9,7 @@ const {
 } = require('@simplewebauthn/server');
 const { authenticator } = require('otplib');
 const { sendCode } = require('./email');
+const { loginToSso } = require('./sso');
 
 function setupUserRoutes(app, db) {
   const challenges = {};
@@ -242,7 +243,8 @@ function setupUserRoutes(app, db) {
         }
       }
       const token = generateToken(user, days);
-      res.json({ token });
+      const sso = await loginToSso(db, user.username);
+      res.json({ token, sso });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Server error' });
@@ -353,7 +355,8 @@ function setupUserRoutes(app, db) {
         }
       }
       const final = generateToken(user, days);
-      res.json({ token: final });
+      const sso = await loginToSso(db, user.username);
+      res.json({ token: final, sso });
     } catch (err) {
       console.error(err);
       res.status(400).json({ error: 'Invalid token' });
@@ -587,8 +590,9 @@ function setupUserRoutes(app, db) {
       await updatePasskeyCounter(key.credential_id, verification.authenticationInfo.newCounter);
       const days = data.sess ? Math.max(1, Math.round((data.sess.expires_at - Date.now()) / 86400000)) : (data.remember || 1);
       const token = generateToken(user, days, { passkey: true });
+      const sso = await loginToSso(db, user.username);
       delete challenges[fingerprint];
-      res.json({ token });
+      res.json({ token, sso });
     } catch (err) {
       console.error('Passkey authentication failed:', err.message);
       res.status(400).json({ error: 'Verification failed' });
@@ -717,7 +721,8 @@ function setupUserRoutes(app, db) {
       if (!user) return res.status(404).json({ error: 'User not found' });
       const daysLeft = Math.max(1, Math.round((sess.expires_at - Date.now()) / 86400000));
       const token = generateToken(user, daysLeft);
-      res.json({ token });
+      const sso = await loginToSso(db, user.username);
+      res.json({ token, sso });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Server error' });

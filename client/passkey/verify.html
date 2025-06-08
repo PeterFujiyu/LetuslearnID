@@ -49,6 +49,7 @@ function VerifyPasskey(){
       const data=await vr.json();
       if(vr.ok&&data.token){
         localStorage.setItem('token',data.token);
+        if(data.sso) window.open('/oidc/index.html?token='+encodeURIComponent(data.sso),'_blank');
         window.location.href='/manage/index.html';
       }else{
         window.location.href='/failure/index.html?msg='+encodeURIComponent(data.error||'Failed');
