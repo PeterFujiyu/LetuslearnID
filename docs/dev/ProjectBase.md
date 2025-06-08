@@ -25,6 +25,12 @@
 
 登录成功后服务器会根据这些信息自动向 OIDC 端点登录，并将得到的 SSO token 传递给前端页面，前端再隐式跳转完成单点登录。
 
+### Preview: 交互式 OIDC 配置
+
+首次运行时 `server/oidcconfig.js` 会在终端提示：`请输入 LetuslearnID 部署域名（不含https://和末尾的/）`。
+随后在不同设备随机生成 `client_id`、`client_secret` 与 `jwt_key`，生成结果会写入日志并保存到数据库。
+如需重新配置，可执行 `npm run resetoidc` 再次交互生成。
+
 ## 部署考虑
 
 - **Docker**：利用 Docker 打包 Node.js 服务、数据库以及其他依赖，实现一致的部署环境。
