@@ -10,9 +10,6 @@ before(async () => {
   await initDb();
 });
 
-after(done => {
-  db.close(done);
-});
 
 describe('POST /register', () => {
   it('creates a new user', async () => {

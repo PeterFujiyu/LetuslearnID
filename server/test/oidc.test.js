@@ -25,5 +25,4 @@ describe('OIDC config and login', () => {
     assert.ok(res.body.sso);
   });
 
-  after(done => db.close(done));
 });
