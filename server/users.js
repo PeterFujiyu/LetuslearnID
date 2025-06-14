@@ -491,10 +491,11 @@ function setupUserRoutes(app, db) {
     try {
       const expectedChallenge = challenges[req.user.username];
       if (!expectedChallenge) return res.status(400).json({ error: 'No challenge' });
+      const proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0];
       const verification = await verifyRegistrationResponse({
         response: req.body,
         expectedChallenge,
-        expectedOrigin: `http://${req.headers.host}`,
+        expectedOrigin: `${proto}://${req.headers.host}`,
         expectedRPID: req.headers.host.split(':')[0],
         requireUserVerification: false
       });
@@ -575,10 +576,11 @@ function setupUserRoutes(app, db) {
       const uid = data.sess ? data.sess.user_id : data.uid;
       if (!key || key.user_id !== uid) return res.status(404).json({ error: 'Unknown credential' });
       const user = await promisify(db.get.bind(db))('SELECT * FROM users WHERE id = ?', uid);
+      const proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0];
       const verification = await verifyAuthenticationResponse({
         response: req.body,
         expectedChallenge: data.challenge,
-        expectedOrigin: `http://${req.headers.host}`,
+        expectedOrigin: `${proto}://${req.headers.host}`,
         expectedRPID: req.headers.host.split(':')[0],
         requireUserVerification: false,
         credential: {
