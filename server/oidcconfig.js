@@ -19,9 +19,14 @@ async function initOidcConfig(db, verbose = false) {
   )`);
   const row = await get('SELECT * FROM oidcauth LIMIT 1');
   if (!row) {
-    const rl = readline.createInterface({ input, output });
-    const domain = (await rl.question('请输入 LetuslearnID 部署域名（不含https://和末尾的/）: ')).trim();
-    rl.close();
+    let domain;
+    if (process.env.NODE_ENV === 'test' || process.env.DB_FILE === ':memory:') {
+      domain = 'id.letuslearn.now';
+    } else {
+      const rl = readline.createInterface({ input, output });
+      domain = (await rl.question('请输入 LetuslearnID 部署域名（不含https://和末尾的/）: ')).trim();
+      rl.close();
+    }
 
     const cfg = {
       client_id: crypto.randomUUID(),

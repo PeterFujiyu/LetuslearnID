@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import { promisify } from 'util';
 import { authenticator } from 'otplib';
 import { app, initDb, db } from '../index.js';
+import readline from 'readline';
 
 before(async () => {
   await initDb();
