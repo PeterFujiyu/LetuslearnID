@@ -128,7 +128,7 @@ initDb()
     oidc = new Provider(cfg.endpoint, {
       clients,
       formats: { AccessToken: 'jwt' },
-      features: { devInteractions: false },
+      features: { devInteractions: { enabled: false } },
       findAccount: async (ctx, id) => ({ accountId: id, claims: () => ({ sub: id }) }),
       jwks: {
         keys: [{
