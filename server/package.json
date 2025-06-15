@@ -5,9 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "mocha",
-    "unit": "mocha --ignore test/e2e.test.js",
-    "e2e": "mocha test/e2e.test.js",
+    "test": "DB_FILE=:memory: mocha",
+    "unit": "DB_FILE=:memory: mocha --ignore test/e2e.test.js",
+    "e2e": "DB_FILE=:memory: mocha test/e2e.test.js",
     "start": "node index.js",
     "postinstall": "npx playwright install chromium",
     "sql": "sqlite3 server/users.db .tables",

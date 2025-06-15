@@ -102,6 +102,7 @@ npm run e2e
 ```
 
 新增 `passkey.test.js` 用于覆盖通行密钥相关接口，运行 `npm test` 会一并执行。
+OIDC 相关配置和登录流程也在 `oidc.test.js` 覆盖，无需单独操作。
 
 ## API 说明
 
