@@ -7,7 +7,7 @@ import { generateKeyPair, exportJWK } from 'jose';
 async function initOidcConfig(db, verbose = false) {
   const run = promisify(db.run.bind(db));
   const get = promisify(db.get.bind(db));
-  await run(`CREATE TABLE IF NOT EXISTS oidcauth (
+  await run(`CREATE TABLE IF NOT EXISTS oidc_auth (
     id INTEGER PRIMARY KEY,
     client_id TEXT,
     client_secret TEXT,
@@ -38,14 +38,17 @@ async function initOidcConfig(db, verbose = false) {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
   let created = false;
-  let row = await get('SELECT * FROM oidcauth LIMIT 1');
+  let row = await get('SELECT * FROM oidc_auth LIMIT 1');
+  let redirect;
   if (!row) {
     let domain;
     if (process.env.NODE_ENV === 'test' || process.env.DB_FILE === ':memory:') {
       domain = 'id.letuslearn.now';
+      redirect = 'https://cloud.letuslearn.now/api/auth/sso_callback';
     } else {
       const rl = readline.createInterface({ input, output });
       domain = (await rl.question('请输入 LetuslearnID 部署域名（不含https://和末尾的/）: ')).trim();
+      redirect = (await rl.question('请输入回调地址(如https://cloud.letuslearn.now/api/auth/sso_callback): ')).trim();
       rl.close();
     }
 
@@ -59,21 +62,22 @@ async function initOidcConfig(db, verbose = false) {
       jwt_key: crypto.randomBytes(32).toString('hex'),
       extra_scope: 'profile email'
     };
-    await run('INSERT INTO oidcauth (client_id,client_secret,username_key,org_name,app_name,endpoint,jwt_key,extra_scope) VALUES (?,?,?,?,?,?,?,?)',
+    await run('INSERT INTO oidc_auth (client_id,client_secret,username_key,org_name,app_name,endpoint,jwt_key,extra_scope) VALUES (?,?,?,?,?,?,?,?)',
       Object.values(cfg));
-    row = await get('SELECT * FROM oidcauth LIMIT 1');
+    row = await get('SELECT * FROM oidc_auth LIMIT 1');
     created = true;
   } else {
     if (verbose) console.log('OIDC 配置:', row);
+    redirect = 'https://cloud.letuslearn.now/api/auth/sso_callback';
   }
 
   const cCount = await get('SELECT COUNT(*) as c FROM oidc_clients');
   if (cCount.c === 0) {
     const id = crypto.randomUUID();
     const secret = crypto.randomBytes(16).toString('hex');
-    const redirect = JSON.stringify(['http://localhost:5244/oidc/callback']);
+    const redirectUris = JSON.stringify([redirect]);
     await run('INSERT INTO oidc_clients (id,client_id,client_secret,redirect_uris) VALUES (?,?,?,?)',
-      id, id, secret, redirect);
+      id, id, secret, redirectUris);
     created = true;
   }
 
