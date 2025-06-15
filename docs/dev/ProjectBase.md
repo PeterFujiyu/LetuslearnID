@@ -140,8 +140,8 @@ OIDC 相关配置和登录流程也在 `oidc.test.js` 覆盖，无需单独操�
 
 ### OIDC 标准端点
 
-系统现已引入 oidc-provider，提供标准的 `/oidc/.well-known/openid-configuration`、`/oidc/authorization`、`/oidc/token` 等端点。
-客户端应按 OIDC 流程跳转到 `/oidc/authorization` 取得 `code`，随后在 `/oidc/token` 交换 `access_token`。
+系统现已引入 oidc-provider，提供标准的 `/oidc/.well-known/openid-configuration`、`/oidc/auth`、`/oidc/token` 等端点。
+客户端应按 OIDC 流程跳转到 `/oidc/auth` 取得 `code`，随后在 `/oidc/token` 交换 `access_token`。
 为保证生产环境安全，服务器在初始化 OIDC Provider 时关闭了 `devInteractions` 开发界面，相关配置位于 `server/index.js`。
 从当前版本开始，OIDC Provider 在启动时会自动生成 RSA 密钥对用于签名，无需再读取 `jwt_key` 字段。
 
