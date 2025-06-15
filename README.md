@@ -58,6 +58,9 @@ vim emailconfig.json # SMTP
 npm start
 ```
 
+首次运行将提示输入 LetuslearnID 部署域名，并在终端打印生成的 OIDC 配置。
+如需重新生成配置，可执行 `npm run resetoidc`。
+
 ## 测试
 
 运行单元和端到端测试：

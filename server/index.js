@@ -6,6 +6,7 @@ export { initDb, db } from './lib/db.js';
 import { initOIDCProvider } from './provider.js';
 import userRoutes from './users.js';
 import adminRoutes from './admin.js';
+import initOidcConfig from './oidcconfig.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,6 +39,7 @@ app.use('/admin', async (req, res, next) => {
 
 export let oidc;
 export async function initOIDC() {
+  await initOidcConfig(db);
   const issuer = process.env.ISSUER || 'https://id.letuslearn.now';
   oidc = await initOIDCProvider(issuer);
   app.use(oidc.callback());
