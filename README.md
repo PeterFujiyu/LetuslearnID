@@ -99,5 +99,6 @@ TEST_CODE=123654 TEST_EMAIL=user@example.com npx mocha testemailsmtp.js
 
 
 启动后访问 `http://localhost:3000/oidc/index.html`，点击按钮即可跳转到 OIDC 授权页并在回调页显示令牌结果。现已集成 oidc-provider，可通过 `/oidc/authorization` 与 `/oidc/token` 完成标准登录流程。
+服务启动时会自动生成用以签名的 RSA 密钥对，因此无需手动配置。
 
 

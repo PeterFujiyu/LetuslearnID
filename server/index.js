@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import { promisify } from 'util';
 import initOidcConfig from './oidcconfig.js';
 import Provider from 'oidc-provider';
+import { generateKeyPairSync } from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -125,18 +126,18 @@ initDb()
       redirect_uris: [cfg.endpoint + '/oidc/callback'],
       scope: 'openid profile email'
     }];
+    const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+    const jwk = privateKey.export({ format: 'jwk' });
+    jwk.kid = 'signing-key-1';
+    jwk.alg = 'RS256';
+    jwk.use = 'sig';
+
     oidc = new Provider(cfg.endpoint, {
       clients,
       formats: { AccessToken: 'jwt' },
       features: { devInteractions: { enabled: false } },
       findAccount: async (ctx, id) => ({ accountId: id, claims: () => ({ sub: id }) }),
-      jwks: {
-        keys: [{
-          kty: 'oct',
-          k: Buffer.from(cfg.jwt_key, 'hex').toString('base64url'),
-          kid: 'signing-key-1'
-        }]
-      }
+      jwks: { keys: [jwk] }
     });
     app.use('/oidc', oidc.callback());
     if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
