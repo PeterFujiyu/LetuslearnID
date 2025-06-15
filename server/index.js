@@ -94,8 +94,25 @@ const initDb = () => {
 
 import userRoutes from './users.js';
 import adminRoutes from './admin.js';
+import { loginToSso } from './sso.js';
 const userMod = userRoutes(app, db);
 adminRoutes(app, db, userMod.authenticateToken);
+
+app.get('/api/auth/sso', async (req, res) => {
+  if (req.query.method !== 'sso_get_token') {
+    return res.status(400).json({ error: 'invalid method' });
+  }
+  const auth = req.headers.authorization;
+  const token = auth && auth.split(' ')[1];
+  try {
+    const user = await userMod.verifyToken(token);
+    const sso = await loginToSso(db, user.username);
+    if (!sso) return res.status(500).json({ error: 'sso disabled' });
+    res.json({ token: sso });
+  } catch (err) {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+});
 
 app.post('/sso/login', (req,res) => {
   const { token } = req.body || {};
