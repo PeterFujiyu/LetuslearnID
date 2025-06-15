@@ -38,10 +38,11 @@ async function initOidcConfig(db, verbose = false) {
       jwt_key: crypto.randomBytes(32).toString('hex'),
       extra_scope: 'profile email'
     };
-    console.log('OIDC 配置初次生成:', cfg);
     await run('INSERT INTO oidcauth (client_id,client_secret,username_key,org_name,app_name,endpoint,jwt_key,extra_scope) VALUES (?,?,?,?,?,?,?,?)',
       Object.values(cfg));
-    return cfg;
+    const inserted = await get('SELECT client_id,client_secret,username_key,org_name,app_name,endpoint,jwt_key,extra_scope FROM oidcauth LIMIT 1');
+    console.log('OIDC 配置初次生成:', inserted);
+    return inserted;
   } else {
     if (verbose) console.log('OIDC 配置:', row);
     return row;
