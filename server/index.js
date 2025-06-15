@@ -129,14 +129,7 @@ initDb()
       clients,
       formats: { AccessToken: 'jwt' },
       features: { devInteractions: { enabled: false } },
-      findAccount: async (ctx, id) => ({ accountId: id, claims: () => ({ sub: id }) }),
-      jwks: {
-        keys: [{
-          kty: 'oct',
-          k: Buffer.from(cfg.jwt_key, 'hex').toString('base64url'),
-          kid: 'signing-key-1'
-        }]
-      }
+      findAccount: async (ctx, id) => ({ accountId: id, claims: () => ({ sub: id }) })
     });
     app.use('/oidc', oidc.callback());
     if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
