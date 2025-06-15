@@ -23,6 +23,12 @@ describe('OIDC config and login', () => {
     const res = await request(app).post('/login').send({ username:'oidc', password:'pw' });
     assert.strictEqual(res.status, 200);
     assert.ok(res.body.sso);
+    const api = await request(app)
+      .get('/api/auth/sso')
+      .set('Authorization', 'Bearer ' + res.body.token)
+      .query({ method: 'sso_get_token' });
+    assert.strictEqual(api.status, 200);
+    assert.ok(api.body.token);
   });
 
 });
