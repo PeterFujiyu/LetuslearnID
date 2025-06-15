@@ -59,8 +59,9 @@ npm start
 ```
 
 首次运行会要求输入 `请输入 LetuslearnID 部署域名（不含https://和末尾的/）:`，
-系统写入数据库后会立刻读取并以 `OIDC 配置初次生成:` 打印配置内容。
-如需重新生成配置，可执行 `npm run resetoidc`。
+系统会创建 `oidcauth`、`oidc_clients` 及 `oidc_keys` 表并写入默认数据，
+随后以 `OIDC 配置初次生成:` 打印包含客户端与密钥在内的完整配置。
+如需重新生成配置，可执行 `npm run resetoidc`，该命令会清空以上三张表后重新生成。
 
 ## 测试
 

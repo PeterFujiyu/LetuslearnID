@@ -11,6 +11,8 @@ const db = new sqlite3.Database(dbFile);
 const run = (q, p = []) => new Promise((res, rej) => db.run(q, p, err => err ? rej(err) : res()));
 (async () => {
   await run('DROP TABLE IF EXISTS oidcauth');
+  await run('DROP TABLE IF EXISTS oidc_clients');
+  await run('DROP TABLE IF EXISTS oidc_keys');
   await initOidcConfig(db, true);
   db.close();
 })();
