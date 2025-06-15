@@ -52,6 +52,7 @@ export async function initOIDCProvider(issuer) {
     },
     proxy: true,
   };
-
+  // temp log
+  console.log('>> provider issuer =', issuer);
   return new Provider(issuer, configuration);
 }
