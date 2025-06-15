@@ -50,6 +50,7 @@ export async function initOIDCProvider(issuer) {
       IdToken: 3600,
       RefreshToken: 60 * 60 * 24 * 30,
     },
+    proxy: true,
   };
 
   return new Provider(issuer, configuration);

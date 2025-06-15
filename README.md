@@ -119,4 +119,22 @@ TEST_CODE=123654 TEST_EMAIL=user@example.com npx mocha testemailsmtp.js
 
 启动后访问 `http://localhost:3000/oidc/index.html`，点击按钮即可跳转到 OIDC 授权页并在回调页显示令牌结果。系统会从 `oidc_clients` 表读取配置，并使用 `jose` 动态生成 RSA 密钥对。所有标准端点 `/auth`、`/token` 等均已启用，授权阶段可选择通过通行密钥或 TOTP 完成验证。
 
+## Nginx 反向代理部署
+
+若在生产环境通过 Nginx 终端 TLS，可按以下步骤让 OIDC 正确识别 HTTPS：
+
+1. **显式设置 ISSUER**：
+
+   ```bash
+   export ISSUER=https://id.letuslearn.now
+   ```
+
+2. **启用 Provider 的 proxy**：在 `server/provider.js` 创建 Provider 时加入 `proxy: true`。
+
+3. **Express 信任代理**：在 `server/index.js` 中调用 `app.set('trust proxy', true)` 以读取 `X-Forwarded-Proto`。
+
+4. **Nginx 传递真实协议**：在示例配置 `docs/sites-nginx.conf` 的 `location /` 内加入 `proxy_set_header X-Forwarded-Proto https;`。
+
+仅在 HTTPS 环境下，AList 等客户端才能按标准 OIDC 流程完成登录。
+
 
