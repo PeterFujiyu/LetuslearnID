@@ -53,6 +53,8 @@ export async function initOIDCProvider(issuer) {
     proxy: true,
   };
   // temp log
-  console.log('>> provider issuer =', issuer);
+  const discovery = oidc.discovery;
+  console.log('>> discovery.issuer              =', discovery.issuer);
+  console.log('>> discovery.authorization_endpoint =', discovery.authorization_endpoint);
   return new Provider(issuer, configuration);
 }
