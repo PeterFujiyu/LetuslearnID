@@ -137,13 +137,10 @@ npm run e2e
 
 当字段缺失时会返回 400 状态码并记录错误信息，而不再输出完整的堆栈日志。若 WebAuthn 验证未通过也会返回相同的 400 状态码，不会再出现 "toString" 相关异常。由于注册选项采用 `userVerification: 'preferred'`，后端验证阶段已关闭强制 `requireUserVerification`，从而兼容未提供用户验证信息的设备。
 
-### `GET /api/auth/sso`
+### OIDC 标准端点
 
-配合 Alist 等支持 OIDC 的应用获取单点登录令牌。查询参数需包含 `method=sso_get_token`，并在 `Authorization` 头携带登录 token。成功时返回：
-
-```json
-{ "token": "<sso token>" }
-```
+系统现已引入 oidc-provider，提供标准的 `/oidc/.well-known/openid-configuration`、`/oidc/authorization`、`/oidc/token` 等端点。
+客户端应按 OIDC 流程跳转到 `/oidc/authorization` 取得 `code`，随后在 `/oidc/token` 交换 `access_token`。
 
 ### 前端路径问题
 
@@ -159,3 +156,4 @@ npm run e2e
 ## 未来工作
 
 为了更好的拥有扩展性，项目计划在资源允许时将数据库从 SQLite 迁移到 PostgreSQL，此部分由于资源限制暂列为技术债。
+

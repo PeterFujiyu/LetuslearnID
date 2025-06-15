@@ -14,3 +14,4 @@ const run = (q, p = []) => new Promise((res, rej) => db.run(q, p, err => err ? r
   await initOidcConfig(db, true);
   db.close();
 })();
+

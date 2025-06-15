@@ -9,7 +9,7 @@ async function loginToSso(db, username) {
   payload[cfg.username_key] = username;
   payload.org = cfg.org_name;
   payload.app = cfg.app_name;
-  return jwt.sign(payload, cfg.client_secret, { expiresIn: '1h' });
+  return jwt.sign(payload, cfg.jwt_key, { expiresIn: '1h' });
 }
 
 export { loginToSso };

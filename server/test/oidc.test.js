@@ -16,19 +16,12 @@ describe('OIDC config and login', () => {
     assert.ok(row);
   });
 
-  it('returns sso token on login', async () => {
-    const reg = await request(app).post('/register').send({ username:'oidc', email:'o@e.c', password:'pw' });
-    const row = await get('SELECT id, code FROM pending_codes WHERE id=?', reg.body.id);
-    await request(app).post('/register/verify').send({ id: reg.body.id, code: row.code });
-    const res = await request(app).post('/login').send({ username:'oidc', password:'pw' });
+  it('exposes OIDC configuration', async () => {
+    const res = await request(app).get('/oidc/.well-known/openid-configuration');
     assert.strictEqual(res.status, 200);
-    assert.ok(res.body.sso);
-    const api = await request(app)
-      .get('/api/auth/sso')
-      .set('Authorization', 'Bearer ' + res.body.token)
-      .query({ method: 'sso_get_token' });
-    assert.strictEqual(api.status, 200);
-    assert.ok(api.body.token);
+    assert.ok(res.body.issuer);
   });
 
 });
+
+
