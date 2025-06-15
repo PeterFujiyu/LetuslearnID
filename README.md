@@ -98,5 +98,6 @@ TEST_CODE=123654 TEST_EMAIL=user@example.com npx mocha testemailsmtp.js
 若邮件成功送达则表示配置正确。
 
 
-启动后访问 `http://localhost:3000/oidc/index.html`，点击按钮即可跳转到 OIDC 授权页并在回调页显示令牌结果。默认示例客户端使用 `alist` 账户，密钥来自 `ALIST_SECRET` 环境变量。
+启动后访问 `http://localhost:3000/oidc/index.html`，点击按钮即可跳转到 OIDC 授权页并在回调页显示令牌结果。现已集成 oidc-provider，可通过 `/oidc/authorization` 与 `/oidc/token` 完成标准登录流程。
+
 

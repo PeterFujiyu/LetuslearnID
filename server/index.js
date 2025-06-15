@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { promisify } from 'util';
 import initOidcConfig from './oidcconfig.js';
+import Provider from 'oidc-provider';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -98,27 +99,6 @@ import { loginToSso } from './sso.js';
 const userMod = userRoutes(app, db);
 adminRoutes(app, db, userMod.authenticateToken);
 
-app.get('/api/auth/sso', async (req, res) => {
-  if (req.query.method !== 'sso_get_token') {
-    return res.status(400).json({ error: 'invalid method' });
-  }
-  const auth = req.headers.authorization;
-  const token = auth && auth.split(' ')[1];
-  try {
-    const user = await userMod.verifyToken(token);
-    const sso = await loginToSso(db, user.username);
-    if (!sso) return res.status(500).json({ error: 'sso disabled' });
-    res.json({ token: sso });
-  } catch (err) {
-    res.status(401).json({ error: 'Unauthorized' });
-  }
-});
-
-app.post('/sso/login', (req,res) => {
-  const { token } = req.body || {};
-  console.log('SSO login token', token);
-  res.json({ url: '/success/index.html?type=login' });
-});
 
 app.use('/admin', async (req,res,next)=>{
   let token = req.headers.authorization && req.headers.authorization.split(' ')[1];
@@ -133,9 +113,32 @@ app.use('/admin', async (req,res,next)=>{
   }
 });
 
+let oidc;
 initDb()
   .then(() => initOidcConfig(db))
-  .then(() => {
+  .then(cfg => {
+    const clients = [{
+      client_id: cfg.client_id,
+      client_secret: cfg.client_secret,
+      grant_types: ['authorization_code', 'refresh_token'],
+      response_types: ['code'],
+      redirect_uris: [cfg.endpoint + '/oidc/callback'],
+      scope: 'openid profile email'
+    }];
+    oidc = new Provider(cfg.endpoint, {
+      clients,
+      formats: { AccessToken: 'jwt' },
+      features: { devInteractions: false },
+      findAccount: async (ctx, id) => ({ accountId: id, claims: () => ({ sub: id }) }),
+      jwks: {
+        keys: [{
+          kty: 'oct',
+          k: Buffer.from(cfg.jwt_key, 'hex').toString('base64url'),
+          kid: 'signing-key-1'
+        }]
+      }
+    });
+    app.use('/oidc', oidc.callback());
     if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
       const PORT = process.env.PORT || 3000;
       app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
@@ -145,4 +148,4 @@ initDb()
     console.error('Failed to initialize database', err);
   });
 
-export { app, initDb, initOidcConfig, db };
+export { app, initDb, initOidcConfig, db, oidc };
