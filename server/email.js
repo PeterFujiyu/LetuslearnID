@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import config from './emailconfig.json' assert { type: 'json' };
+import config from './emailconfig.json' with { type: 'json' };
 
 const transporter = nodemailer.createTransport(config.smtp);
 

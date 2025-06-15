@@ -13,4 +13,5 @@ describe('数据库表结构', function() {
       done();
     });
   });
+});
 
