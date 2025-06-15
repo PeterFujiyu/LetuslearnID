@@ -21,15 +21,8 @@
 
 ## Preview: OIDC 单点登录
 
-首次启动时会创建 `oidcauth` 表并生成以下字段，内容将写入日志：客户端 ID、客户端机密、用户名键、组织名称、应用名称、端点名称、JWT 公钥及额外范围。可执行 `npm run resetoidc` 重新生成。
-
-登录成功后服务器会根据这些信息自动向 OIDC 端点登录，并将得到的 SSO token 传递给前端页面，前端再隐式跳转完成单点登录。
-
-### Preview: 交互式 OIDC 配置
-
-首次运行时 `server/oidcconfig.js` 会在终端提示：`请输入 LetuslearnID 部署域名（不含https://和末尾的/）`。
-随后在不同设备随机生成 `client_id`、`client_secret` 与 `jwt_key`，生成结果会写入日志并保存到数据库。
-如需重新配置，可执行 `npm run resetoidc` 再次交互生成。
+首次启动时会创建 `oidc_clients` 表并自动插入 AList 作为首个客户端，同时生成 RSA 公钥记录到 `oidc_keys` 表。后续可通过 `/admin/clients` 接口添加更多客户端。
+登录成功后服务器会据此向 OIDC 端点发放标准 Token，前端即可完成单点登录。
 
 ## 部署考虑
 

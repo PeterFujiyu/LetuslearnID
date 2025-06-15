@@ -12,6 +12,16 @@ LetuslearnID 是一个简单轻量的账户管理服务器，基于 [Express](ht
 
 ## 安装
 
+### 快速开始
+
+若已安装 Docker，可直接运行下列命令启动 PostgreSQL、LetuslearnID 及 AList：
+
+```bash
+docker compose up -d
+```
+
+随后访问 `http://localhost:3000/` 即可体验。
+
 ```bash
 # Install node 20 on Ubuntu
 sudo apt update && sudo apt upgrade
@@ -36,7 +46,9 @@ vim emailconfig.json # SMTP
 
 可以通过以下环境变量来调整服务器行为：
 
-- `JWT_SECRET` — JWT 签名密钥（默认 `dev-secret`）
+- `ISSUER` — OIDC Issuer 地址，默认为 `https://id.letuslearn.now`
+- `COOKIE_KEY_1`、`COOKIE_KEY_2` — 签名 Cookie 的随机值
+- `JWT_SECRET` — SSO Token 签名密钥（默认 `dev-secret`）
 - `PORT` — HTTP 服务端口（默认 `3000`）
 - `DB_FILE` — SQLite 数据库文件路径（默认 `./server/users.db`）
 
@@ -98,7 +110,6 @@ TEST_CODE=123654 TEST_EMAIL=user@example.com npx mocha testemailsmtp.js
 若邮件成功送达则表示配置正确。
 
 
-启动后访问 `http://localhost:3000/oidc/index.html`，点击按钮即可跳转到 OIDC 授权页并在回调页显示令牌结果。现已集成 oidc-provider，可通过 `/oidc/auth` 与 `/oidc/token` 完成标准登录流程。
-服务启动时会自动生成用以签名的 RSA 密钥对，因此无需手动配置。
+启动后访问 `http://localhost:3000/oidc/index.html`，点击按钮即可跳转到 OIDC 授权页并在回调页显示令牌结果。系统会从 `oidc_clients` 表读取配置，并使用 `jose` 动态生成 RSA 密钥对。所有标准端点 `/auth`、`/token` 等均已启用，授权阶段可选择通过通行密钥或 TOTP 完成验证。
 
 

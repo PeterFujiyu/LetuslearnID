@@ -1,15 +1,9 @@
-import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 
 async function loginToSso(db, username) {
-  const get = promisify(db.get.bind(db));
-  const cfg = await get('SELECT * FROM oidcauth LIMIT 1');
-  if (!cfg) return null;
-  const payload = {};
-  payload[cfg.username_key] = username;
-  payload.org = cfg.org_name;
-  payload.app = cfg.app_name;
-  return jwt.sign(payload, cfg.jwt_key, { expiresIn: '1h' });
+  const secret = process.env.JWT_SECRET || 'dev-secret';
+  const payload = { sub: username, org: 'Letuslearn', app: 'LetuslearnID' };
+  return jwt.sign(payload, secret, { expiresIn: '1h' });
 }
 
 export { loginToSso };
