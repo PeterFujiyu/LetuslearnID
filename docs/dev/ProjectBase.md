@@ -1,6 +1,6 @@
 # letuslearn.now 统一账号系统
 
-本文档规划了在 **letuslearn.now** 域名下构建统一账号系统的总体思路。该系统将允许用户只使用一个账号即可访问所有子服务，其中文件存储服务 [AList](https://alist.letuslearn.now) 已经部署完成。
+本文档规划了在 **letuslearn.now** 域名下构建统一账号系统的总体思路。该系统将允许用户只使用一个账号即可访问所有子服务，其中文件存储服务 [AList](https://cloud.letuslearn.now) 已经部署完成。
 
 ## 技术栈
 
