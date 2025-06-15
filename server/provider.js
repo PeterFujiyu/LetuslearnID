@@ -53,8 +53,13 @@ export async function initOIDCProvider(issuer) {
     proxy: true,
   };
   // temp log
-  const discovery = oidc.discovery;
-  console.log('>> discovery.issuer              =', discovery.issuer);
-  console.log('>> discovery.authorization_endpoint =', discovery.authorization_endpoint);
-  return new Provider(issuer, configuration);
+  // 实例化 provider
+  const oidc = new Provider(issuer, configuration);
+
+  // 临时调试：打印 discovery 里实际生成的端点
+  const discovery = oidc.issuer.configuration();
+  console.log('>> discovery.issuer                 =', discovery.issuer);
+  console.log('>> discovery.authorization_endpoint  =', discovery.authorization_endpoint);
+
+  return oidc;
 }
