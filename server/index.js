@@ -41,7 +41,8 @@ app.use('/admin', async (req, res, next) => {
 export let oidc;
 export async function initOIDC() {
   await initOidcConfig(db);
-  const issuer = process.env.ISSUER || 'https://id.letuslearn.now';
+  let issuer = process.env.ISSUER || 'https://id.letuslearn.now';
+  if (!issuer.startsWith('http')) issuer = 'https://' + issuer;
   oidc = await initOIDCProvider(issuer);
   app.use(oidc.callback());
 }
