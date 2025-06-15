@@ -57,12 +57,7 @@ export async function initOIDCProvider(issuer) {
   const oidc = new Provider(issuer, configuration);
 
   // 临时调试：打印 discovery 里实际生成的端点
-  oidc.initialize().then(() => {
-  // initialize() 结束后，oidc.Context 已经建好
-    const meta = oidc.discovery;          // 所有会输出到 .well-known 的字段
-    console.log('>> discovery.issuer                 =', meta.issuer);
-    console.log('>> discovery.authorization_endpoint  =', meta.authorization_endpoint);
-  });
+  console.log('>> OIDC Provider issuer =', oidc.issuer);
 
   return oidc;
 }
