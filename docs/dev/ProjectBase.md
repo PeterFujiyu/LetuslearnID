@@ -21,7 +21,7 @@
 
 ## Preview: OIDC 单点登录
 
-首次启动时会创建 `oidc_clients` 表并自动插入 AList 作为首个客户端，同时生成 RSA 公钥记录到 `oidc_keys` 表。后续可通过 `/admin/clients` 接口添加更多客户端。
+首次启动时会创建 `oidcauth`、`oidc_clients` 与 `oidc_keys` 三张表，自动生成客户端与签名密钥。后续可通过 `/admin/clients` 接口添加更多客户端。
 登录成功后服务器会据此向 OIDC 端点发放标准 Token，前端即可完成单点登录。
 
 ## 部署考虑

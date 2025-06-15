@@ -2,6 +2,7 @@ import { promisify } from 'util';
 import crypto from 'crypto';
 import readline from 'readline/promises';
 import { stdin as input, stdout as output } from 'process';
+import { generateKeyPair, exportJWK } from 'jose';
 
 async function initOidcConfig(db, verbose = false) {
   const run = promisify(db.run.bind(db));
@@ -17,7 +18,27 @@ async function initOidcConfig(db, verbose = false) {
     jwt_key TEXT,
     extra_scope TEXT
   )`);
-  const row = await get('SELECT * FROM oidcauth LIMIT 1');
+  await run(`CREATE TABLE IF NOT EXISTS oidc_clients (
+    id TEXT PRIMARY KEY,
+    client_id TEXT,
+    client_secret TEXT,
+    redirect_uris TEXT,
+    scopes TEXT DEFAULT 'openid profile email',
+    grant_types TEXT DEFAULT 'authorization_code refresh_token',
+    response_types TEXT DEFAULT 'code',
+    token_endpoint_auth_method TEXT DEFAULT 'client_secret_post',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  await run(`CREATE TABLE IF NOT EXISTS oidc_keys (
+    kid TEXT PRIMARY KEY,
+    kty TEXT,
+    alg TEXT,
+    use TEXT,
+    key TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+  let created = false;
+  let row = await get('SELECT * FROM oidcauth LIMIT 1');
   if (!row) {
     let domain;
     if (process.env.NODE_ENV === 'test' || process.env.DB_FILE === ':memory:') {
@@ -40,13 +61,43 @@ async function initOidcConfig(db, verbose = false) {
     };
     await run('INSERT INTO oidcauth (client_id,client_secret,username_key,org_name,app_name,endpoint,jwt_key,extra_scope) VALUES (?,?,?,?,?,?,?,?)',
       Object.values(cfg));
-    const inserted = await get('SELECT client_id,client_secret,username_key,org_name,app_name,endpoint,jwt_key,extra_scope FROM oidcauth LIMIT 1');
-    console.log('OIDC 配置初次生成:', inserted);
-    return inserted;
+    row = await get('SELECT * FROM oidcauth LIMIT 1');
+    created = true;
   } else {
     if (verbose) console.log('OIDC 配置:', row);
-    return row;
   }
+
+  const cCount = await get('SELECT COUNT(*) as c FROM oidc_clients');
+  if (cCount.c === 0) {
+    const id = crypto.randomUUID();
+    const secret = crypto.randomBytes(16).toString('hex');
+    const redirect = JSON.stringify(['http://localhost:5244/oidc/callback']);
+    await run('INSERT INTO oidc_clients (id,client_id,client_secret,redirect_uris) VALUES (?,?,?,?)',
+      id, id, secret, redirect);
+    created = true;
+  }
+
+  let keyRow = await get('SELECT kid,key FROM oidc_keys LIMIT 1');
+  if (!keyRow) {
+    const { privateKey } = await generateKeyPair('RS256', { extractable: true });
+    const jwk = await exportJWK(privateKey);
+    jwk.use = 'sig';
+    jwk.alg = 'RS256';
+    jwk.kid = crypto.randomUUID();
+    await run('INSERT INTO oidc_keys (kid,kty,alg,use,key) VALUES (?,?,?,?,?)',
+      jwk.kid, jwk.kty, jwk.alg, jwk.use, JSON.stringify(jwk));
+    keyRow = { kid: jwk.kid, key: JSON.stringify(jwk) };
+    created = true;
+  }
+
+  const client = await get('SELECT client_id,client_secret,redirect_uris FROM oidc_clients LIMIT 1');
+  const cfg = { ...row, redirect_uris: JSON.parse(client.redirect_uris), kid: keyRow.kid };
+  if (created) {
+    console.log('OIDC 配置初次生成:', cfg);
+  } else if (verbose) {
+    console.log('OIDC 配置:', cfg);
+  }
+  return cfg;
 }
 
 export default initOidcConfig;
