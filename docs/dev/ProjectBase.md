@@ -31,7 +31,7 @@
 - **HTTPS**：使用如 Let’s Encrypt 的 TLS 证书，保证通信安全。
 - **可扩展性**：API 设计采用模块化路由，便于未来新增服务。
 - **代码结构**：普通用户的登录、验证及凭据保存等接口已集中到 `server/users.js`，更易于维护。
-- **Nginx 示例配置**：仓库 `docs/sites-nginx.conf` 提供虚拟主机示例，可参考部署；反向代理需传递 `X-Forwarded-Proto` 头以便 WebAuthn 正确识别 HTTPS。
+- **Nginx 示例配置**：仓库 `docs/sites-nginx.conf` 提供虚拟主机示例，可参考部署；反向代理需传递 `X-Forwarded-Proto` 头以便 WebAuthn 正确识别 HTTPS。若由 Nginx 终端 TLS，需在环境变量中显式设置 `ISSUER=https://id.letuslearn.now`，并在代码中启用 `app.set('trust proxy', true)` 及 OIDC Provider 的 `proxy: true`。
 - **监控与日志**：使用 **Winston** 等日志工具及 **Prometheus** 之类的监控方案，跟踪系统状态。
 
 ## 后续步骤
