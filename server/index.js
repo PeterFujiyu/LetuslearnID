@@ -136,8 +136,10 @@ initDb()
       clients,
       formats: { AccessToken: 'jwt' },
       features: { devInteractions: { enabled: false } },
+
       findAccount: async (ctx, id) => ({ accountId: id, claims: () => ({ sub: id }) }),
       jwks: { keys: [jwk] }
+
     });
     app.use('/oidc', oidc.callback());
     if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
