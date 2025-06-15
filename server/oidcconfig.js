@@ -71,14 +71,15 @@ async function initOidcConfig(db, verbose = false) {
     redirect = 'https://cloud.letuslearn.now/api/auth/sso_callback';
   }
 
-  const cCount = await get('SELECT COUNT(*) as c FROM oidc_clients');
-  if (cCount.c === 0) {
-    const id = crypto.randomUUID();
-    const secret = crypto.randomBytes(16).toString('hex');
+  const clientRow = await get('SELECT id,client_id,client_secret FROM oidc_clients LIMIT 1');
+  if (!clientRow) {
     const redirectUris = JSON.stringify([redirect]);
     await run('INSERT INTO oidc_clients (id,client_id,client_secret,redirect_uris) VALUES (?,?,?,?)',
-      id, id, secret, redirectUris);
+      row.client_id, row.client_id, row.client_secret, redirectUris);
     created = true;
+  } else if (clientRow.client_id !== row.client_id || clientRow.client_secret !== row.client_secret) {
+    await run('UPDATE oidc_clients SET client_id=?, client_secret=? WHERE id=?',
+      row.client_id, row.client_secret, clientRow.id);
   }
 
   let keyRow = await get('SELECT kid,key FROM oidc_keys LIMIT 1');

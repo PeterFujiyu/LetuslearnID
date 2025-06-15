@@ -22,6 +22,7 @@
 ## Preview: OIDC 单点登录
 
 首次启动时会创建 `oidc_auth`、`oidc_clients` 与 `oidc_keys` 三张表，自动生成客户端与签名密钥。后续可通过 `/admin/clients` 接口添加更多客户端。
+其中 `client_id` 与 `client_secret` 会在两张表中保持同步，避免重复初始化后出现不一致。
 登录成功后服务器会据此向 OIDC 端点发放标准 Token，前端即可完成单点登录。
 
 ## 部署考虑
